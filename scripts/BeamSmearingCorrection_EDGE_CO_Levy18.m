@@ -40,6 +40,7 @@ if nargin < 2
     mtype=2;
 end
 
+
 if part==1
     %create simulated data cube
     
