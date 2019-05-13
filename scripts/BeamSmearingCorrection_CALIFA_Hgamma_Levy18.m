@@ -60,6 +60,7 @@ if part==1
         lamHg=4340.47; %AA
         lamHgobs=lamHg*(1+z); %AA
         
+        
         %import fitted CO rotation curve
         RC=importdata(['fits/data/',src,'.ifitinfo.txt']);
         if isfield(RC,'data')==1 & strcmp(src,'ARP220')==0 & strcmp(src,'UGC03253')==0 & strcmp(src,'UGC10043')==0
