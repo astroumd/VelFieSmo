@@ -9,6 +9,9 @@ Your python should have astropy, specutils, pyspeckit. Usually via pip. There ar
 
 ## Examples
 
+The various versions of cubespectrum*.py are a mess, as they are experiments using different fits access methods and more.
+One of the goals is to make a nice clean version of this script.
+
     ./cubespectrum12.py ../data/ngc6503.fits
     ./cubespectrum12.py ../data/ngc6503.fits  244 182
     ./cubespectrum12.py ../data/ngc6503.fits  161 128
