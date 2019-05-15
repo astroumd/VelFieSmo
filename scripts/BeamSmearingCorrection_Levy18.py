@@ -40,10 +40,11 @@ def beam_smearing_correction(path_to_veldispmap,path_to_rotationcurve,spectral_r
 	Required packages: numpy, astropy, scipy, spectral_cube, pandas, radio_beam, datetime, subprocess, matplotlib
 	Author: R. C. Levy (rlevy@astro.umd.edu)
 	Based on COBeamSmearingCorr.m, HgBeamSmearingCorr.m, Cdefvar.m, fitpersic.m by R. C. Levy and mkvelfield.m by A. D. Bolatto
-	Last updated: 2019-05-14
+	Last updated: 2019-05-15
 	Change log:
 		2019-05-13 : file created, RCL
 		2019-05-14 : initial commit, RCL
+		2019-05-15 : minor fixes and documentation updates, RCL
 	
 	Examples
 	--------
@@ -172,7 +173,7 @@ def beam_smearing_correction(path_to_veldispmap,path_to_rotationcurve,spectral_r
 	#at each spaxel, put a Gaussian centered on the correct velocity channel given by the model vfield
 	for i in range(hdr['NAXIS1']):
 		for j in range(hdr['NAXIS2']):
-			#find index of channel that is closest to the velocity at that pixel
+			#find index of channel that is closest to the velocity at that spaxel
 			idx = np.argmin(np.abs(vfield_model[i,j]-chans))
 			#put a Gaussian line
 			gauss = np.exp(-(chans-vfield_model[i,j])**2/(2*specres_sigma**2))
@@ -196,8 +197,8 @@ def beam_smearing_correction(path_to_veldispmap,path_to_rotationcurve,spectral_r
 	wcs_cube = WCS(hdr_cube)
 
 	#convolve 
-	#set the original beam half the pixel size
-	beam_orig = radio_beam.Beam(major = hdr['CDELT2']/2*3600*u.arcsec, minor=hdr['CDELT2']/2*3600*bmaj/bmin*u.arcsec, pa=bpa*u.deg)
+	#set the original beam to half the pixel size
+	beam_orig = radio_beam.Beam(major = hdr['CDELT2']/2*3600*u.arcsec, minor=hdr['CDELT2']/2*3600*bmin/bmaj*u.arcsec, pa=bpa*u.deg)
 	#final beam is from original mom2 
 	beam_final = radio_beam.Beam(major = bmaj*u.arcsec, minor=bmin*u.arcsec, pa=bpa*u.deg)
 	#store simulated data cube as spectralcube
