@@ -20,7 +20,7 @@ def beam_smearing_correction(path_to_veldispmap,path_to_rotationcurve,spectral_r
 	chan_width : float
 		The channel width, in km/s
 	PA : float
-		The position angle of the receding side of the major axis measured counter clockwise from North, in degrees
+		The position angle of the approaching side of the major axis measured counter clockwise from North, in degrees
 	inc : float
 		The inclination angle of the galaxy along the line of sight, in degrees
 	RA : float
