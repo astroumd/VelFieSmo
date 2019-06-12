@@ -1,9 +1,10 @@
 #script to make 2D maps of intensity, velocity, and velocity dispersion from a 3D data cube
 # R. C. Levy
 # file created: 2019-06-10
-# based on peak_velocity.py by N. Feleke and R. C. Levy
+# based on peak_velocity.py, gaussian_maps.py, and moment_maps.py by N. Feleke and R. C. Levy
 # Change log:
 # 2019-06-10 - file created, RCL
+# 2019-06-12 - added more documentation, RCL
 
 #import modules
 import numpy as np
@@ -13,17 +14,17 @@ from astropy.wcs import WCS
 
 
 #open the data cube
-filename = '../data/ngc6503.fits'
+filename = '../data/ngc6503.fits' #change this line for each cube
 cube = fits.open(filename)
 header = cube[0].header
 data = cube[0].data
 
 #mask the cube based on the SNR first
-signal = np.max(data,axis=0)
+signal = np.max(data,axis=0) #use the max of spectrum at each pixel as the signal
 noise = np.sqrt(np.mean(data**2,axis=0)) #use the rms to estimate the noise
-SNR = signal/noise
+SNR = signal/noise #compute signal to noise ratio
 data_masked = data.copy()
-data_masked[:,SNR < 4]=np.nan
+data_masked[:,SNR < 4]=np.nan #mask pixels with SNR < 4
 
 #define a function to derive the peak intensity and velocity maps
 def mkpeakmaps(data,header):
