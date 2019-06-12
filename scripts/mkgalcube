@@ -16,7 +16,7 @@
 #
 #
 #  parameters, can be changed by the user via the commandline
-set run=model1             # identification, and directory where all files live
+set run=model1             # identification, and basename of all files
 set nbody=1000000          # number of bodies per model
 set r0=1                   # turnover radius
 set v0=100                 # peak velocity
@@ -41,7 +41,7 @@ set seed=0                 # random seed
 set frac=0                 # fraction random motion
 
 set noise=0                # add optional noise to cube
-set nmode=0                # noise before (0) or after (1) smooting?  [after is not good idea unless you known what you are doing]
+set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
 set clip=0                 # clipping level for cube
 
 set restfreq=1.420405751786 # HI restfreq in GHz 
