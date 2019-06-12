@@ -16,6 +16,7 @@
 #
 #
 #  parameters, can be changed by the user via the commandline
+#
 set run=model1             # identification, and basename of all files
 set nbody=1000000          # number of bodies per model
 set r0=1                   # turnover radius
