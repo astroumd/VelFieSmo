@@ -16,20 +16,19 @@
 #
 #
 #  parameters, can be changed by the user via the commandline
-set run=model1             # identification, and basename for all files
+#
+set run=model1             # identification, and basename of all files
 set nbody=1000000          # number of bodies per model
 set r0=1                   # turnover radius
 set v0=100                 # peak velocity
 set re=2                   # exponential scalelength of disk
-set rmax=6                 # edge of disk
+set rmax=6                 # edge of disk (see range= where the grid ends)
 set mc=-1                  # mass concentration parameter
 
 set pa=90                  # PA of disk on sky (E through N)
 set inc=60                 # INC of disk
 set beam=0.1               # FWHM of (smaller) beam
-set beam2=0.2              # FWHM of (bigger) beam2
 set vbeam=0                # FWHM of spectral smoothing beam
-set mass2=0.0              # fraction of beam2 (between 0 and 1)
 set range=8                # gridding from -range:range 
 set vrange=150             # velocity gridding -vrange:vrange
 set nsize=192              # number of pixels in gridding (px=py=2*range/nx)
@@ -43,14 +42,14 @@ set seed=0                 # random seed
 set frac=0                 # fraction random motion
 
 set noise=0                # add optional noise to cube
-set nmode=0                # noise before (0) or after (1) smooting?  [after is not good idea unless you known what you are doing]
+set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
 set clip=0                 # clipping level for cube
 
 set restfreq=1.420405751786 # HI restfreq in GHz 
 set restfreq=115.2712       # CO restfreq in GHz   (HI: 1.420405751786)
 set dec=40                  # DEC of source (RA is forced at 12h)
 
-set clean=1                 # cleanup non-fits files?
+set clean=1                 # cleanup non-fits (NEMO) files?
 
 #  parse the command line arguments (they will then override the above defaults)
 
@@ -110,9 +109,7 @@ mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
 
 echo "Creating the beam"
 mkplummer - 1 | snapgrid - $run.1p $grid_pars
-ccdsmooth $run.1p $run.1pa $beam
-ccdsmooth $run.1p $run.1pb $beam2
-ccdmath $run.1pa,$run.1pb $run.1beam "(1-$mass2)*%1+$mass2*%2"
+ccdsmooth $run.1p $run.1beam $beam
 
 echo "Creating a velocity field - method 2"
 snapgrid $run.20 $run.30 $grid_pars \
@@ -134,13 +131,7 @@ endif
 if ($beam == 0) then
   ccdmath $run.31 $run.32 %1
 else
-  ccdsmooth $run.31 $run.32.a $beam                                  # twice beam smearing
-  ccdsmooth $run.31 $run.32.b $beam2
-  if ($nmode == 0) then
-    ccdmath $run.32.a,$run.32.b $run.32 "(1-$mass2)*%1+$mass2*%2"
-  else
-    ccdmath $run.32.a,$run.32.b $run.32 "(1-$mass2)*%1+$mass2*%2+rang(0,$noise)"
-  endif
+  ccdsmooth $run.31 $run.32 $beam               
 endif
 
 ccdstat $run.32
