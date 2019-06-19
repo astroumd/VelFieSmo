@@ -58,10 +58,8 @@ set clip=0                 # clipping level for cube
 #set restfreq=115.2712       # CO restfreq in GHz   (HI: 1.420405751786)
 set restfreq=1.420405751786 # HI restfreq in GHz 
 
-set dec=70.1166666667                  # DEC of source 
-
-set ra=267.250000000             # RA of source
-
+set ra=267.360133           # From ned(2000)  17h49m26.432s
+set dec=70.144366           # From ned(2000) +70d08m39.72s
 set vsys=28
 
 set clean=1                 # cleanup non-fits (NEMO) files?
