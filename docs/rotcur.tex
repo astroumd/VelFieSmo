@@ -1,0 +1,48 @@
+% -*- tex -*-
+
+\documentclass[12pt]{article}
+
+\begin{document}
+
+\section{Rotation Curves (mom1)}
+
+For convenience we've parameterized our input model rotation curves. We use the notation $r = R/R_0$, where $R_0$
+is a radius scale factor.  All rotation curves have the property they are linear near the center, and
+either flatten off, or drop at larger radii.
+
+\noindent
+The first one is an unrealistic exponentially
+
+$$
+V = V_0 ( 1 - e^{-r} )         \eqno(1)
+$$
+
+
+\noindent
+Here is a family of curves defined by the exponent $m$ (for $m -> \infty$ the linear+flat toy model is reproduced):
+
+$$
+V_m = V_0 {   {r}  \over  { (1+r^m)^{1/m} } }     \eqno(2)
+$$
+
+
+\noindent
+For $m=2$ this is the familiar logarithmic potential (BT, pp.45, eq. 2.54 and eq. 3.77) 
+$$
+    \Phi = {1\over 2} V_0^2
+                     \ln{ \left( R_0^2 + R^2 \right) }  \eqno(2a)
+$$
+
+\section{Density Profiles (mom0)}
+
+The gas density profile is independent of the rotation curve, so these need to be parameterized as well.
+Currently we have a constant and exponential dropoff.
+
+\section{Velocity Dispersion(mom2)}
+
+We normally assume the velocity dispersion of the gas to be constant as function of radius, but in order
+to study any possible degeneracy, we could relax this and e.g. assume a larger velocity dispersion in the
+central bulge regions.  We can use the same scaling radius ($R_0$ for this). 
+
+
+\end{document}                     
