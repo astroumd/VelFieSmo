@@ -1,0 +1,15 @@
+FITSFILE      ngc6503vrad.fits
+THREADS       4
+// Using a threshold mask
+MASK          THRESHOLD
+THRESHOLD     0.003
+// Extracting all maps 
+TOTALMAP      true
+VELOCITYMAP   true
+DISPERSIONMAP true
+RMSMAP        true
+// Extract PV along major axis
+FLAGPV        true
+XPOS_PV       163
+YPOS_PV       123
+PA_PV         -60
