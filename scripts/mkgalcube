@@ -68,7 +68,7 @@ set ra=267.360133           # From ned(2000)  17h49m26.432s
 set dec=70.144366           # From ned(2000) +70d08m39.72s
 set vsys=28
 
-set clean=1                 # cleanup non-fits (NEMO) files?
+set clean=0                 # cleanup non-fits (NEMO) files?
 
 #  parse the command line arguments (they will then override the above defaults)
 
@@ -109,6 +109,15 @@ set model = (potname=rotcurm potpars=0,$r0,$v0,$m)
 
 
 echo "MASS: $mass"
+
+#  make a directory $run, if it doesn't exist yet, else exit
+if (-e $run) then
+  echo Directory $run already exists
+  exit 1
+else
+  mkdir $run
+  cd $run
+endif  
 
 #  keep a log, in case we call this routine multiple times
 echo `date` :: $* >> $run.history
