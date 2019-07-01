@@ -13,10 +13,13 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.0 21-jun-2019"
+set version = "1.10 26-jun-2019"
 #
 # Version history:
-#   1.0 13-jun-2019    First version, just creating the fits cube 
+#   1.0 13-jun-2019    First version, just creating the fits cube
+#   1.1 26-jun-2019    Leaving ccd files with maps of the results
+#
+#   todo:              rotcur
 #
 
 
@@ -104,6 +107,8 @@ set model = (potname=point   potpars=0,1)
 set model = (potname=plummer potpars=0,200,0.0001)
 # funky linear+flat rotation curve
 set model = (potname=rotcur0 potpars=0,$r0,$v0)
+# exp 
+set model = (potname=rotcure potpars=0,$r0,$v0)
 # family
 set model = (potname=rotcurm potpars=0,$r0,$v0,$m)
 
@@ -142,7 +147,7 @@ set pars1=`echo $model[2] | awk -F= '{print $2}'`
 
 rotcurves $name1 $pars1 radii=0:${rmax}:0.01 tab=t plot=f > $run.rotmod
 
-echo "Creating the beam"
+echo "Creating the beam (not used for anything)"
 mkplummer - 1 | snapgrid - $run.1p $grid_pars
 ccdsmooth $run.1p $run.1beam $beam
 
@@ -179,17 +184,14 @@ ccdmom $run.32 $run.34v axis=3 mom=3  peak=0 clip=$clip  # peak
 ccdmom $run.32 $run.35v axis=3 mom=31 peak=0 clip=$clip
 ccdmom $run.32 $run.36v axis=3 mom=31 peak=1 clip=$clip  # peak
 
-# PV slice based on $nsize/2
+# 35v and 33v are identical
+
+# PV slice based on $nsize/2, for a perfect PV slice we do need pa=90 or pa=-90
 ccdslice $run.31 - y $nsize/2-1:$nsize/2 | ccdmom - $run.1pv 3 -1
 
-###defining cdelt values for frequency axis
 
-
-
-
-
-
-# export for BAROLO and such, in decent units (could also use ccdsky)
+#
+# export smooth cube for BAROLO and such, in decent units (could also use ccdsky?)
 #                        
 
 ccdfits $run.32 $run.fits radecvel=t scale=1/60.0,1/60.0,1.0 crpix=$nsize/2+0.5,$nsize/2+0.5,$nvel/2+0.5 \
