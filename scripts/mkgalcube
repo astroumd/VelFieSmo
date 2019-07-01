@@ -13,7 +13,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.10 26-jun-2019"
+set version = "1.2 1-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -36,15 +36,15 @@ set version = "1.10 26-jun-2019"
 set run=model0             # identification, and basename of all files
 set nbody=1000000          # number of points to sample the model
 set r0=2                   # rotation curve characteristic radius
-set v0=115                 # peak velocity
+set v0=100                 # peak velocity
 set re=2                   # exponential scalelength of gas disk
 set m=2                    # rotcurm index (m=2 is logarithic potential)
 
 set rmax=15                # edge of disk
 set mc=-1                  # mass concentration parameter
 
-set pa=-60.1               # PA of disk on sky (E through N)
-set inc=75.1               # INC of disk
+set pa=90                  # PA of disk on sky (E through N) - fixed to 90 for real models to simplify taking cuts like PV slices
+set inc=75                 # INC of disk
 set beam=0.875             # FWHM of beam (14" for VLA)
 set vbeam=0                # FWHM of spectral smoothing beam
 set range=16               # gridding from -range:range 
@@ -67,9 +67,9 @@ set clip=0                 # clipping level for cube
 #set restfreq=115.2712      # CO restfreq in GHz   (HI: 1.420405751786)
 set restfreq=1.420405751786 # HI restfreq in GHz 
 
-set ra=267.360133           # From ned(2000)  17h49m26.432s
+set ra=267.360133           # From ned(2000)  17h49m26.432s    for NGC 6503
 set dec=70.144366           # From ned(2000) +70d08m39.72s
-set vsys=28
+set vsys=0                  # 28 for NGC6305
 
 set clean=0                 # cleanup non-fits (NEMO) files?
 
@@ -198,6 +198,40 @@ ccdfits $run.32 $run.fits radecvel=t scale=1/60.0,1/60.0,1.0 crpix=$nsize/2+0.5,
         crval=$ra,$dec,$vsys restfreq="$restfreq*1e9" freq=f comment="mkgalcube $version"
 
 
+
+# rotation curve, tilted ring method
+# Note that rotcur likes units in arcsec, where we think of arcmin in our "model" units.
+
+set center=`nemoinp $nsize/2+0.5`
+
+
+
+rotcur $run.33v 0:900:20 0:100:20 $pa $inc $vsys $center,$center units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur33
+
+# make a rotation curve where (0,0) is included
+printf "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"  > $run.rotcurtab33
+tabcomment $run.rotcur33 - delete=t                            >> $run.rotcurtab33
+tabplot $run.rotcurtab33 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=800 ycoord=$v0 xcoord="$beam*60.0" yapp=1/xs
+
+# linear fit on first few points
+head -5 $run.rotcurtab33 | tabplot  - 1 4 dycol=5 point=2,0.2 yapp=2/xs 
+head -5 $run.rotcurtab33 | tabnllsqfit - 1 4 par=0,1 free=0,1
+
+# fit an exponential growth  y=p0*(exp(x/p1)-1) that has a nice linear part in center
+# and plot the residual, look at some stats etc.
+tabnllsqfit $run.rotcurtab33 1 4 fit=grow par=100,60 free=1,1 out=$run.fit
+
+# overall
+tabmath $run.fit - %2-%3 |\
+ tabplot - 1 2,3,4 0 800 -10 110  color=2,3,4 line=1,1 point=2,0.05 ycoord=0,100 xcoord=0 yapp=11/xs
+
+# center part
+tabmath $run.fit - %2-%3 |\
+ tabplot - 1 2,3,4 0 160 -16 16   color=2,3,4 line=1,1 point=2,0.2 ycoord=0 xcoord="$beam*60.0" yapp=12/xs
+
+# histogram of residuals
+tabhist $run.fit 3 -16 16 yapp=13/xs
+ 
 
 if ($clean) then
    rm $run.[0-9]*
