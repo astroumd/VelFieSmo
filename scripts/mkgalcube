@@ -45,16 +45,10 @@ set m=2                    # rotcurm index (m=2 is logarithmic potential)
 set rmax=15                # edge of disk
 set mc=-1                  # mass concentration parameter
 
-<<<<<<< HEAD
-set pa=90               # PA of disk on sky (E through N)
-set inc=75.1               # INC of disk
-set beam=0.875             # FWHM of beam (14" for VLA)
-=======
 set pa=90                  # PA of disk on sky (E through N) - fixed to 90 for real models to simplify taking cuts like PV slices
 set inc=75                 # INC of disk
 
 set beam=0.875             # FWHM of beam (14" for VLA for N6503)
->>>>>>> d1d115e85f991e1077416201f0e8406085fad6ea
 set vbeam=0                # FWHM of spectral smoothing beam
 set range=16               # gridding from -range:range 
 set vrange=150             # velocity gridding -vrange:vrange
@@ -140,7 +134,7 @@ endif
 #  keep a log, in case we call this routine multiple times
 echo `date` :: $* >> $run.history
 
- ================================================================================ START
+# ================================================================================ START
 
 rm -f $run.* >& /dev/null
 
