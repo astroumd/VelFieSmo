@@ -13,14 +13,16 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.2 1-jul-2019"
+set version = "1.2 2-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
 #   1.1 26-jun-2019    Leaving ccd files with maps of the results
+#   1.2  1-jul-2019    Adding various rotcur and plotting options
 #
-#   todo:              rotcur
-#
+#   todo:              Becca method
+#                      Gigi method
+#                      rotcurshape instead of rotcur
 
 
 #  Becca: for the EDGE-CALIFA galaxy sample from my 2018 paper, the
@@ -38,20 +40,23 @@ set nbody=1000000          # number of points to sample the model
 set r0=2                   # rotation curve characteristic radius
 set v0=100                 # peak velocity
 set re=2                   # exponential scalelength of gas disk
-set m=2                    # rotcurm index (m=2 is logarithic potential)
+set m=2                    # rotcurm index (m=2 is logarithmic potential)
 
 set rmax=15                # edge of disk
 set mc=-1                  # mass concentration parameter
 
 set pa=90                  # PA of disk on sky (E through N) - fixed to 90 for real models to simplify taking cuts like PV slices
 set inc=75                 # INC of disk
-set beam=0.875             # FWHM of beam (14" for VLA)
+
+set beam=0.875             # FWHM of beam (14" for VLA for N6503)
 set vbeam=0                # FWHM of spectral smoothing beam
 set range=16               # gridding from -range:range 
-
 set vrange=150             # velocity gridding -vrange:vrange
-set nsize=192              # number of pixels in gridding (px=py=2*range/nx)
-set nvel=120               # number of pixels in velocity 
+
+set nsize=193              # number of pixels in gridding (px=py=2*range/nx) [should be odd]
+set nvel=121               # number of pixels in velocity  [should be odd]
+
+set step=20                # stepsize (in arcsec) in tilted ring method
 
 set z0=0.0                 # scaleheight of disk (density)
 set z1=0.0                 # scaleheight of disk (velocity) [new model]
@@ -64,7 +69,6 @@ set noise=0                # add optional noise to cube
 set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
 set clip=0                 # clipping level for cube
 
-#set restfreq=115.2712      # CO restfreq in GHz   (HI: 1.420405751786)
 set restfreq=1.420405751786 # HI restfreq in GHz 
 
 set ra=267.360133           # From ned(2000)  17h49m26.432s    for NGC 6503
@@ -72,6 +76,9 @@ set dec=70.144366           # From ned(2000) +70d08m39.72s
 set vsys=0                  # 28 for NGC6305
 
 set clean=0                 # cleanup non-fits (NEMO) files?
+
+set vel=mom                 # what kind of velocity field to use (mom, peak, ....)
+set bsc=0                   # what kind of beam smearing correction (0, begeman, ...)
 
 #  parse the command line arguments (they will then override the above defaults)
 
@@ -143,9 +150,11 @@ mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
     snaprotate - $run.20 "$inc,$pa" yz
 
 set name1=`echo $model[1] | awk -F= '{print $2}'`
-set pars1=`echo $model[2] | awk -F= '{print $2}'`    
+set pars1=`echo $model[2] | awk -F= '{print $2}'`
 
-rotcurves $name1 $pars1 radii=0:${rmax}:0.01 tab=t plot=f > $run.rotmod
+echo ROTCUR MODEL: $name1 $pars1
+
+rotcurves $name1 $pars1 radii=0:${rmax}:0.01 tab=t plot=f | tabmath - $run.rotmod "%1*60,%2" all
 
 echo "Creating the beam (not used for anything)"
 mkplummer - 1 | snapgrid - $run.1p $grid_pars
@@ -154,8 +163,9 @@ ccdsmooth $run.1p $run.1beam $beam
 echo "Creating a velocity field - method 2"
 snapgrid $run.20 $run.30 $grid_pars \
     zrange=-${vrange}:${vrange} nz=$nvel mean=f evar=m
-    
-ccdstat $run.30
+
+echo RAW CUBE STATS: $run.30
+ccdstat $run.30 bad=0
 if ($nmode == 0) then
   if ($vbeam == 0) then
     ccdmath $run.30 $run.31 "%1+rang(0,$noise)"
@@ -175,7 +185,8 @@ else
   ccdsmooth $run.31 $run.32 $beam               
 endif
 
-ccdstat $run.32
+echo NOISE ADDED AND SMOOTHED CUBE STATS: $run.32
+ccdstat $run.32 bad=0
 ccdmom $run.32 $run.33d axis=3 mom=0 clip=$clip
 ccdmom $run.32 $run.33v axis=3 mom=1 clip=$clip rngmsk=true
 ccdmom $run.32 $run.33s axis=3 mom=2 clip=$clip
@@ -184,11 +195,25 @@ ccdmom $run.32 $run.34v axis=3 mom=3  peak=0 clip=$clip  # peak
 ccdmom $run.32 $run.35v axis=3 mom=31 peak=0 clip=$clip
 ccdmom $run.32 $run.36v axis=3 mom=31 peak=1 clip=$clip  # peak
 
+if ($vel == mom) then
+  ln -s $run.33v $run.vel
+else if ($vel == peak) then
+  ln -s $run.34v $run.vel
+else
+  echo Invalid vel=$vel method
+  exit 1
+endif
+
 # 35v and 33v are identical
 
 # PV slice based on $nsize/2, for a perfect PV slice we do need pa=90 or pa=-90
+# For nsize is odd, no ccdmom is needed    @todo
 ccdslice $run.31 - y $nsize/2-1:$nsize/2 | ccdmom - $run.1pv 3 -1
 
+# V along major axis (case PA=90)
+ccdprint $run.vel "($nsize+1)/2-1":$nsize-1 "($nsize+1)/2-1" newline=t label=x pixel=f > $run.rc1
+ccdprint $run.vel "($nsize+1)/2-1":0:-1     "($nsize+1)/2-1" newline=t label=x pixel=f > $run.rc2
+paste $run.rc1 $run.rc2 | tabmath - - "%1*60,(%4-%2)/2/sind($inc),(%4+%2)/2" all > $run.rc0
 
 #
 # export smooth cube for BAROLO and such, in decent units (could also use ccdsky?)
@@ -204,22 +229,51 @@ ccdfits $run.32 $run.fits radecvel=t scale=1/60.0,1/60.0,1.0 crpix=$nsize/2+0.5,
 
 set center=`nemoinp $nsize/2+0.5`
 
+if ($bsc == 0) then
+  set dens=()
+else if ($bsc == begeman) then
+  set dens=(dens=$run.33d beam=`nemoinp "$beam*60"`)
+else
+  echo Unknown bsc=$bsc
+  exit 1
+endif
 
 
-rotcur $run.33v 0:900:20 0:100:20 $pa $inc $vsys $center,$center units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur33
 
-# make a rotation curve where (0,0) is included
-printf "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"  > $run.rotcurtab33
-tabcomment $run.rotcur33 - delete=t                            >> $run.rotcurtab33
-tabplot $run.rotcurtab33 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=800 ycoord=$v0 xcoord="$beam*60.0" yapp=1/xs
+# backward fitting rotcur (usually gets some extra points near the center)
+rotcur $run.vel 800:0:-$step 100 $pa $inc $vsys $center,$center units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur $dens >& $run.rotcurlog
+# beam="$beam*60.0"
 
-# linear fit on first few points
-head -5 $run.rotcurtab33 | tabplot  - 1 4 dycol=5 point=2,0.2 yapp=2/xs 
-head -5 $run.rotcurtab33 | tabnllsqfit - 1 4 par=0,1 free=0,1
+# make a rotation curve where (0,0) is included and make sure it's sorted by radius
+echo "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"    > $run.tmprotcurtab
+tabcomment $run.rotcur - delete=t                              >> $run.tmprotcurtab
+sort -n $run.tmprotcurtab > $run.rotcurtab
 
-# fit an exponential growth  y=p0*(exp(x/p1)-1) that has a nice linear part in center
+tabplot $run.rotcurtab 1 4 0 800 -10 110 dycol=5 line=1,1 point=2,0.1 ycoord=0,100 xcoord="$beam*60.0" yapp=1/xs
+tabplot $run.rc0       1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,100 yapp=13/xs
+tabplot $run.rotmod    1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,100 yapp=14/xs
+
+
+
+# linear fit on first two points
+head -2 $run.rotcurtab | tabnllsqfit - 1 4 par=0,1 free=0,1 out=$run.linfit2
+
+# linear fit on first few (5) points
+head -5 $run.rotcurtab | tabnllsqfit - 1 4 par=0,1 free=0,1 out=$run.linfit
+# head -5 $run.rotcurtab | tabplot  - 1 4 dycol=5 point=2,0.2 yapp=2/xs 
+tabmath $run.linfit - %2-%3 |\
+ tabplot - 1 2,3,4  color=2,3,4 line=1,1 point=2,0.2 ycoord=0 headline=linfit yapp=2/xs
+tabmath $run.linfit - %2-%3 |\
+ tabplot - 1 2,3,4 0 80 0 80 color=2,3,4 line=1,1 point=2,0.2 ycoord=0 headline=linfit yapp=linear.ps/vcps
+
+
+# fit an exponential growth  y=v0*(1-exp(-x/r0)) that has a nice linear part in center
 # and plot the residual, look at some stats etc.
-tabnllsqfit $run.rotcurtab33 1 4 fit=grow par=100,60 free=1,1 out=$run.fit
+tabnllsqfit $run.rotcurtab 1 4 fit=grow par=100,60 free=1,1 out=$run.fit > $run.fitlog
+cat $run.fitlog
+set a=`grep ^a= $run.fitlog | awk '{print $2}'`
+set b=`grep ^b= $run.fitlog | awk '{print $2}'`
+echo Fitted slope: `nemoinp $a/$b`
 
 # overall
 tabmath $run.fit - %2-%3 |\
@@ -227,11 +281,17 @@ tabmath $run.fit - %2-%3 |\
 
 # center part
 tabmath $run.fit - %2-%3 |\
- tabplot - 1 2,3,4 0 160 -16 16   color=2,3,4 line=1,1 point=2,0.2 ycoord=0 xcoord="$beam*60.0" yapp=12/xs
+ tabplot - 1 2,3,4 0 160 -16 16   color=2,3,4 line=1,1 point=2,0.2 ycoord=0 xcoord="$beam*60.0" headline=expfit yapp=12/xs
+tabmath $run.fit - %2-%3 |\
+ tabplot - 1 2,3,4 0 80 0 80   color=2,3,4 line=1,1 point=2,0.2 ycoord=0 xcoord="$beam*60.0" headline=expfit yapp=expfit.ps/vcps
+ 
 
 # histogram of residuals
-tabhist $run.fit 3 -16 16 yapp=13/xs
- 
+# tabhist $run.fit 3 -16 16 yapp=20/xs
+
+# histogram of residuals
+tabhist $run.rotcurtab 15 yapp=20/xs
+
 
 if ($clean) then
    rm $run.[0-9]*
