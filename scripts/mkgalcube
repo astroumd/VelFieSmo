@@ -301,6 +301,10 @@ if (1) then
   tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 110 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,100 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
+  tabnllsqfit $run.rcmod load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  tabnllsqfit $run.rc000 load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  tabnllsqfit $run.rct   load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+
 endif
 
 # linear fit on first two points
