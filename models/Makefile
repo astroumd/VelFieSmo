@@ -2,13 +2,14 @@
 
 MKGALCUBE = $(shell readlink -f ../scripts/mkgalcube)
 
+.PHONY: model0 test1
 
 #        model0 is special, we always make it
-model0: .model0
-
-.model0:
+#        it optionally runs Bbarolo, if it exists
+model0:
 	rm -rf model0
 	$(MKGALCUBE)
+	-(cd model0; Bbarolo -p ../../data/model0_galmod.par)
 
 
 # test1:  see if bsc=begeman can work (so far, it cannot, or too much numerical pixel noise)
@@ -17,14 +18,17 @@ model0: .model0
 INC   = 60
 M     = 4
 R0    = 1
+RE    = 1000
 BEAM1 = 1
 BEAM2 = 2
+NBODY = 1000000
 
 test1:
+	rm -rf test1
 	mkdir test1
-	(cd test1; $(MKGALCUBE) run=m0 beam=0        inc=$(INC) m=$(M) r0=$(R0))
-	(cd test1; $(MKGALCUBE) run=m1 beam=$(BEAM1) inc=$(INC) m=$(M) r0=$(R0))
-	(cd test1; $(MKGALCUBE) run=m2 beam=$(BEAM2) inc=$(INC) m=$(M) r0=$(R0))
+	(cd test1; $(MKGALCUBE) run=m0 beam=0        inc=$(INC) m=$(M) r0=$(R0) re=$(RE) nbody=$(NBODY))
+	(cd test1; $(MKGALCUBE) run=m1 beam=$(BEAM1) inc=$(INC) m=$(M) r0=$(R0) re=$(RE) nbody=$(NBODY))
+	(cd test1; $(MKGALCUBE) run=m2 beam=$(BEAM2) inc=$(INC) m=$(M) r0=$(R0) re=$(RE) nbody=$(NBODY))
 
 #   1:  V
 #   2:  V - v
