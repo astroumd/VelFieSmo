@@ -53,3 +53,10 @@ test1b:
 	nds9 -2 test1/m2/bsc2
 	nds9 -3 test1/m2/bsc3
 	nds9 -4 test1/m2/bsc4
+
+ngc6503:
+	../scripts/mkgalcube run=ngc6503 step=10 pa=-60 v0=115 r0=0.15 m=2 beam=0.23 vsys=28 sigmav=10
+
+fig1:
+	rm -rf fig1; ../scripts/mkgalcube run=fig1 step=10 beam=2 m=2
+
