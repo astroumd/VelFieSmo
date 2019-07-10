@@ -13,7 +13,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.5  9-jul-2019"
+set version = "1.5  10-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -66,7 +66,7 @@ set z0=0.0                 # scaleheight of disk (density)
 set z1=0.0                 # scaleheight of disk (velocity) [new model]
 set vloss=0.0              # loss in rotation speed at higher latitudes [old model]
 
-set seed=0                 # random seed
+set seed=123               # random seed
 set sigmav=5               # random motion in XY plane (constant as function of radius)
 
 set noise=0                # add optional noise to cube
@@ -82,7 +82,7 @@ set vsys=0                  # 28 for NGC6305
 set clean=0                 # cleanup non-fits (NEMO) files?
 
 set vel=mom                 # what kind of velocity field to use (mom, peak, ....)
-set bsc=0                   # what kind of beam smearing correction (0, begeman, ...)
+set bsc=0                   # what kind of beam smearing correction (0, begeman, ...) [deprecated]
 
 set yapps=yapp%d.ps/vcps    # yapp printf string (%d/xs, yapp%d.ps/vcps)
 set yappn=1                 # first yapp number
