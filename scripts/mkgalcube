@@ -13,7 +13,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.5  10-jul-2019"
+set version = "1.6  10-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -21,6 +21,7 @@ set version = "1.5  10-jul-2019"
 #   1.2  1-jul-2019    Adding various rotcur and plotting options
 #   1.4  3-jul-2019    Constant disk velocity dispersion option
 #   1.5  9-jul-2019    rotcurshape (note: rotcurm == core), order r0,v0
+#   1.6 10-jul-2019    defaults changed (step, seed, 
 #
 #   todo:              Becca method
 #                      Gigi method
@@ -60,7 +61,7 @@ set vrange=150             # velocity gridding -vrange:vrange
 set nsize=193              # number of pixels in gridding (px=py=2*range/nx) [should be odd]
 set nvel=121               # number of pixels in velocity  [should be odd]
 
-set step=20                # stepsize (in arcsec) in tilted ring method
+set step=10                # stepsize (in arcsec) in tilted ring method
 
 set z0=0.0                 # scaleheight of disk (density)
 set z1=0.0                 # scaleheight of disk (velocity) [new model]
@@ -72,6 +73,8 @@ set sigmav=5               # random motion in XY plane (constant as function of 
 set noise=0                # add optional noise to cube
 set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
 set clip=0                 # clipping level for cube
+
+set clump=0                # number between 0 and 1   0=no clumpy 1=very clumpy    smoothing will affect this too
 
 set restfreq=1.420405751786 # HI restfreq in GHz 
 
@@ -153,7 +156,7 @@ echo Creating disk with $nbody particles and concentration parameter $mc
 #          snapmass - - mass=1 |\                      MC=0
 mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
        $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
-       snapmass - - "mass=$mass" |\
+       snapmass - - "mass=$mass*xrandom(1-$clump,1+$clump)" |\
     snaprotate - $run.20 "$inc,$pa" yz
 
 set name1=`echo $model[1] | awk -F= '{print $2}'`
@@ -263,9 +266,15 @@ rotcur $run.vel 800:0:-$step $v0 $pa $inc $vsys $center,$center units=arcmin \
     tab=$run.rotcur $dens             >& $run.rotcurlog
 
 rotcurshape $run.vel 0,700 $pa $inc $vsys $center,$center units=arcmin \
-    fixed=vsys,pa,inc,xpos,ypos \
-    rotcur1="core,$v0,$r0*60*1.5,$m,1,1,1" resid=$run.resid
-
+    fixed=vsys,pa,xpos,ypos \
+    rotcur1="core,$v0,$r0*60,$m,1,1,1" resid=$run.resid
+if ($status) then
+  rm $run.resid
+  rotcurshape $run.vel 0,700 $pa $inc $vsys $center,$center units=arcmin \
+    fixed=vsys,pa,xpos,ypos \
+    rotcur1="core,$v0,$r0*60*2,$m,1,1,1" resid=$run.resid
+endif
+    
 # make a rotation curve where (0,0) is included and make sure it's sorted by radius
 echo "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"    > $run.tmprotcurtab
 tabcomment $run.rotcur - delete=t                              >> $run.tmprotcurtab
