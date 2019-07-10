@@ -62,7 +62,7 @@ fig1:
 
 
 test2:
-	for m in 1 2 4; do \
+	for m in 1 2 3 4; do \
 	  for beam in 0 0.5 1 2 ; do \
 	     echo M=$$m BEAM=$$beam ;\
 	     $(MKGALCUBE) run=run_$$m:$$beam step=10 m=$$m beam=$$beam > run.log 2>&1 ;\
