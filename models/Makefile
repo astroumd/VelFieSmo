@@ -55,8 +55,17 @@ test1b:
 	nds9 -4 test1/m2/bsc4
 
 ngc6503:
-	../scripts/mkgalcube run=ngc6503 step=10 pa=-60 v0=115 r0=0.15 m=2 beam=0.23 vsys=28 sigmav=10
+	$(MKGALCUBE) run=ngc6503 step=10 pa=-60 v0=115 r0=0.15 m=2 beam=0.23 vsys=28 sigmav=10
 
 fig1:
-	rm -rf fig1; ../scripts/mkgalcube run=fig1 step=10 beam=2 m=2
+	rm -rf fig1; $(MKGALCUBE) run=fig1 step=10 beam=2 m=2
 
+
+test2:
+	for m in 1 2 4; do \
+	  for beam in 0 0.5 1 2 ; do \
+	     echo M=$$m BEAM=$$beam ;\
+	     $(MKGALCUBE) run=run_$$m:$$beam step=10 m=$$m beam=$$beam > run.log 2>&1 ;\
+	     mv run.log run_$$m:$$beam ;\
+          done ;\
+	done
