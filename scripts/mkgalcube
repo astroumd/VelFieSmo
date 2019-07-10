@@ -296,22 +296,22 @@ if (1) then
   tabmath $run.rotcurtab $run.rotcurrad %1 all
   
   set nrct=`cat $run.rotcurtab | wc -l`
-  head -$nrct $run.rc00                                   > $run.rc000
-  tabmath $run.rotcurtab - %1,%4,%5 all                   > $run.rct
+  head -$nrct $run.rc00                                   > $run.rcslit
+  tabmath $run.rotcurtab - %1,%4,%5 all                   > $run.rcring
   tabspline $run.rotmod x=@$run.rotcurrad | tabmath - - 0 > $run.rcmod
   
-  paste $run.rct $run.rc000 $run.rcmod                    > $run.rccmp
+  paste $run.rcring $run.rcslit $run.rcmod                > $run.rccmp
   tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 110 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
   echo "=== Fitting $run.rcmod ==="
-  tabnllsqfit $run.rcmod load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
-  echo "=== Fitting $run.rc000 ==="  
-  tabnllsqfit $run.rc000 load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
-  echo "=== Fitting $run.rct ==="  
-  tabnllsqfit $run.rct   load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
-  set fit=$run.rc000
-  set fit=$run.rct
+  tabnllsqfit $run.rcmod  load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  echo "=== Fitting $run.rcslit ==="  
+  tabnllsqfit $run.rcslit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  echo "=== Fitting $run.rcring ==="  
+  tabnllsqfit $run.rcring load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  set fit=$run.rcslit
+  set fit=$run.rcring
   echo "===Now using $fit for plots ==="
   tabnllsqfit $fit       load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999 out=$run.rc.fit
   if ($status) then
