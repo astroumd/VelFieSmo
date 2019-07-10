@@ -55,7 +55,7 @@ test1b:
 	nds9 -4 test1/m2/bsc4
 
 ngc6503:
-	$(MKGALCUBE) run=ngc6503 step=10 pa=-60 v0=115 r0=0.15 m=2 beam=0.23 vsys=28 sigmav=10
+	$(MKGALCUBE) run=ngc6503 step=10 pa=-60 v0=115 r0=0.15 m=2 beam=0.23 vsys=28 sigmav=8
 
 fig1:
 	rm -rf fig1; $(MKGALCUBE) run=fig1 step=10 beam=2 m=2
