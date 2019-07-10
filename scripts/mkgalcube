@@ -3,23 +3,24 @@
 #  mkgalcube:   make a galaxy cube in FITS format, using NEMO
 #               (NOTE: it's also trivial to simulate (proto)stellar disks
 #
-#
 #  By default this gives a 16 arcmin field, a galaxy of size 12 arcmin, and 5" pixels
 #  and covering about 300 km/s spectrally, although the galaxy covers 200 at most. This
 #  leaves a few line free channels at both ends of the spectrum.
+#  Based on the NGC 6503 VLA HI datacube
 #
 #  See also:
 #    https://www.astro.rug.nl/~gipsy/tsk/galmod.dc1
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.4  3-jul-2019"
+set version = "1.5  9-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
 #   1.1 26-jun-2019    Leaving ccd files with maps of the results
 #   1.2  1-jul-2019    Adding various rotcur and plotting options
 #   1.4  3-jul-2019    Constant disk velocity dispersion option
+#   1.5  9-jul-2019    rotcurshape (note: rotcurm == core), order r0,v0
 #
 #   todo:              Becca method
 #                      Gigi method
@@ -38,10 +39,11 @@ set version = "1.4  3-jul-2019"
 #
 set run=model0             # identification, and basename of all files
 set nbody=1000000          # number of points to sample the model
-set r0=2                   # rotation curve characteristic radius
+
 set v0=100                 # peak velocity
+set r0=2                   # rotation curve characteristic radius
 set re=2                   # exponential scalelength of gas disk
-set m=2                    # rotcurm index (m=2 is logarithmic potential)
+set m=2                    # rotcurm/core index (m=2 is logarithmic potential)
 set lbs=1                  # L_B/L_B* Persic shape parameter
 
 set rmax=15                # edge of disk
@@ -50,7 +52,7 @@ set mc=-1                  # mass concentration parameter
 set pa=90                  # PA of disk on sky (E through N) - fixed to 90 for real models to simplify taking cuts like PV slices
 set inc=75                 # INC of disk
 
-set beam=0.875             # FWHM of beam (14" for VLA for N6503)
+set beam=1                 # FWHM of beam (14" for VLA for N6503)
 set vbeam=0                # FWHM of spectral smoothing beam
 set range=16               # gridding from -range:range 
 set vrange=150             # velocity gridding -vrange:vrange
@@ -65,7 +67,7 @@ set z1=0.0                 # scaleheight of disk (velocity) [new model]
 set vloss=0.0              # loss in rotation speed at higher latitudes [old model]
 
 set seed=0                 # random seed
-set sigmav=0               # random motion in XY plane (constant as function of radius)
+set sigmav=5               # random motion in XY plane (constant as function of radius)
 
 set noise=0                # add optional noise to cube
 set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
@@ -121,15 +123,13 @@ set model = (potname=point   potpars=0,1)
 # plummer
 set model = (potname=plummer potpars=0,200,0.0001)
 # funky linear+flat rotation curve
-set model = (potname=rotcur0 potpars=0,$r0,$v0)
+set model = (potname=rotcur0 potpars=0,$v0,$r0)
 # persic
 set model = (potname=persic  potpars=0,$v0,$r0,$lbs)
 # exp 
-set model = (potname=rotcure potpars=0,$r0,$v0)
-# family
-set model = (potname=rotcurm potpars=0,$r0,$v0,$m)
-
-echo "MASS: $mass"
+set model = (potname=rotcure potpars=0,$v0,$r0)
+# core family (rotcurshape has the fit=core for this)
+set model = (potname=rotcurm potpars=0,$v0,$r0,$m)
 
 #  make a directory $run, if it doesn't exist yet, else exit
 if (-e $run) then
@@ -144,8 +144,6 @@ endif
 echo `date` :: $* >> $run.history
 
 # ================================================================================ START
-
-rm -f $run.* >& /dev/null
 
 echo mkgalcube version $version using yapps=$yapps
 echo Creating disk with $nbody particles and concentration parameter $mc
@@ -242,12 +240,13 @@ ccdfits $run.32 $run.fits radecvel=t scale=1/60.0,1/60.0,1.0 crpix=$nsize/2+0.5,
         crval=$ra,$dec,$vsys restfreq="$restfreq*1e9" freq=f comment="mkgalcube $version"
 
 
-
 # rotation curve, tilted ring method
 # Note that rotcur likes units in arcsec, where we think of arcmin in our "model" units.
+# so in the remainder of the script there will be instances of *60 or /60
 
-set center=`nemoinp $nsize/2+0.5`
+set center=`nemoinp $nsize/2-0.5`        # center where (0,0) is first pixel (rotcur convention)
 
+#  bsc is deprecated in this script
 if ($bsc == 0) then
   set dens=()
 else if ($bsc == begeman) then
@@ -258,21 +257,25 @@ else
 endif
 
 
-
 # backward fitting rotcur (usually gets some extra points near the center)
-rotcur $run.vel 800:0:-$step 100 $pa $inc $vsys $center,$center units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur $dens >& $run.rotcurlog
-# beam="$beam*60.0"
+rotcur $run.vel 800:0:-$step $v0 $pa $inc $vsys $center,$center units=arcmin \
+    fixed=vsys,pa,inc,xpos,ypos \
+    tab=$run.rotcur $dens             >& $run.rotcurlog
+
+rotcurshape $run.vel 0,700 $pa $inc $vsys $center,$center units=arcmin \
+    fixed=vsys,pa,inc,xpos,ypos \
+    rotcur1="core,$v0,$r0*60*1.5,$m,1,1,1" resid=$run.resid
 
 # make a rotation curve where (0,0) is included and make sure it's sorted by radius
 echo "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"    > $run.tmprotcurtab
 tabcomment $run.rotcur - delete=t                              >> $run.tmprotcurtab
 sort -n $run.tmprotcurtab                                       > $run.rotcurtab
 
-tabplot $run.rotcurtab 1 4 0 800 -10 110 dycol=5 line=1,1 point=2,0.1 ycoord=0,100 xcoord="$beam*60.0" yapp=$yapp
+tabplot $run.rotcurtab 1 4 0 800 -10 110 dycol=5 line=1,1 point=2,0.1 ycoord=0,$v0 xcoord="$beam*60.0" yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
-tabplot $run.rc0       1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,100 yapp=$yapp
+tabplot $run.rc0       1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
-tabplot $run.rotmod    1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,100 yapp=$yapp
+tabplot $run.rotmod    1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
 
 if (1) then
@@ -298,12 +301,35 @@ if (1) then
   tabspline $run.rotmod x=@$run.rotcurrad | tabmath - - 0 > $run.rcmod
   
   paste $run.rct $run.rc000 $run.rcmod                    > $run.rccmp
-  tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 110 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,100 yapp=$yapp
+  tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 110 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
+  echo "=== Fitting $run.rcmod ==="
   tabnllsqfit $run.rcmod load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  echo "=== Fitting $run.rc000 ==="  
   tabnllsqfit $run.rc000 load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  echo "=== Fitting $run.rct ==="  
   tabnllsqfit $run.rct   load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  set fit=$run.rc000
+  set fit=$run.rct
+  echo "===Now using $fit for plots ==="
+  tabnllsqfit $fit       load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999 out=$run.rc.fit
+  if ($status) then
+     rm $run.rc.fit  
+     tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*1.5,$m" xrange=1:999 out=$run.rc.fit
+     if ($status) then
+          rm $run.rc.fit
+          tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*3,$m" xrange=1:999 out=$run.rc.fit
+     endif
+  endif
+  tabplot $run.rc.fit 1 2,3 line=1,1 color=2,4 ycoord=0 xcoord=0 yapp=$yapp
+  set yapp=`printf $yapps $yappn` ; @ yappn++
+
+  echo 0 0 0       > $run.rc.fit0
+  cat $run.rc.fit >> $run.rc.fit0
+  paste $run.rccmp $run.rc.fit0    > $run.rccmp2
+  tabplot $run.rccmp2  1,4,7,1  2,5,8,12  0 160 -10 110 color=4,2,3,4 line=1,1 point=2,0.1 dycol=3,6,9,9 ycoord=0,$v0 yapp=$yapp
+  set yapp=`printf $yapps $yappn` ; @ yappn++
 
 endif
 
@@ -330,7 +356,7 @@ echo Fitted slope: `nemoinp $a/$b`
 
 # overall
 tabmath $run.fit - %2-%3 |\
- tabplot - 1 2,3,4 0 800 -10 110  color=2,3,4 line=1,1 point=2,0.05 ycoord=0,100 xcoord=0 yapp=$yapp
+ tabplot - 1 2,3,4 0 800 -10 110  color=2,3,4 line=1,1 point=2,0.05 ycoord=0,$v0 xcoord=0 yapp=$yapp
  set yapp=`printf $yapps $yappn` ; @ yappn++ 
 
 # center part
