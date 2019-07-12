@@ -3,9 +3,10 @@
 #  mkgalcube:   make a galaxy cube in FITS format, using NEMO
 #               (NOTE: it's also trivial to simulate (proto)stellar disks
 #
-#  By default this gives a 16 arcmin field, a galaxy of size 12 arcmin, and 5" pixels
-#  and covering about 300 km/s spectrally, although the galaxy covers 200 at most. This
-#  leaves a few line free channels at both ends of the spectrum.
+#  By default we use a 16 arcmin field, a galaxy of size 15 arcmin, and ~10" pixels
+#  and covering about 300 km/s spectrally, although the galaxy covers 200. This
+#  leaves a few line free channels at both ends of the spectrum, which is useful
+#  for 
 #  Based on the NGC 6503 VLA HI datacube
 #
 #  See also:
@@ -13,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.6  10-jul-2019"
+set version = "1.7  11-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -21,7 +22,7 @@ set version = "1.6  10-jul-2019"
 #   1.2  1-jul-2019    Adding various rotcur and plotting options
 #   1.4  3-jul-2019    Constant disk velocity dispersion option
 #   1.5  9-jul-2019    rotcurshape (note: rotcurm == core), order r0,v0
-#   1.6 10-jul-2019    defaults changed (step, seed, 
+#   1.6 10-jul-2019    defaults changed (step, seed)
 #
 #   todo:              Becca method
 #                      Gigi method
@@ -33,7 +34,6 @@ set version = "1.6  10-jul-2019"
 #  rotation curve turnover radius is 1.93 +\- 0.96 (where the
 #  uncertainty is one standard deviation accounting for scatter among
 #  galaxies).
-
 
 #
 #  (command line) parameters, can be changed by the user via the commandline
@@ -96,13 +96,13 @@ foreach a ($*)
   set $a
 end
 
-#
+#  sanity check
 if ($?NEMO == 0) then
-  echo NEMO has not been loaded in your shell
+  echo NEMO has not been loaded in your shell, we need it.
   exit 1
 endif
 
-#  set the first $yapp string
+#  set the first $yapp string, which controls what kind of plotting we do
 set yapp=`printf $yapps $yappn` ; @ yappn++
 
 
@@ -131,7 +131,7 @@ set model = (potname=rotcur0 potpars=0,$v0,$r0)
 set model = (potname=persic  potpars=0,$v0,$r0,$lbs)
 # exp 
 set model = (potname=rotcure potpars=0,$v0,$r0)
-# core family (rotcurshape has the fit=core for this)
+# rotcurm/core family (rotcurshape has the fit=core for this)
 set model = (potname=rotcurm potpars=0,$v0,$r0,$m)
 
 #  make a directory $run, if it doesn't exist yet, else exit
@@ -150,10 +150,8 @@ echo `date` :: $* >> $run.history
 
 echo mkgalcube version $version using yapps=$yapps
 echo Creating disk with $nbody particles and concentration parameter $mc
+echo Rotation Curve model=$model
 
-#     snapmass - - "mass=exp(-r/$re)" |\               MC=-1  [default]
-#    snapmass - - mass="1/(r+0.001)" |\                MC=1
-#          snapmass - - mass=1 |\                      MC=0
 mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
        $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
        snapmass - - "mass=$mass*xrandom(1-$clump,1+$clump)" |\
@@ -261,16 +259,17 @@ endif
 
 
 # backward fitting rotcur (usually gets some extra points near the center)
-rotcur $run.vel 800:0:-$step $v0 $pa $inc $vsys $center,$center units=arcmin \
+set maxring = `nemoinp "$rmax*60"`
+rotcur $run.vel ${maxring}:0:-$step $v0 $pa $inc $vsys $center,$center units=arcmin \
     fixed=vsys,pa,inc,xpos,ypos \
     tab=$run.rotcur $dens             >& $run.rotcurlog
 
-rotcurshape $run.vel 0,700 $pa $inc $vsys $center,$center units=arcmin \
-    fixed=vsys,pa,xpos,ypos \
+rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
+    fixed=vsys,pa,inc,xpos,ypos \
     rotcur1="core,$v0,$r0*60,$m,1,1,1" resid=$run.resid
 if ($status) then
   rm $run.resid
-  rotcurshape $run.vel 0,700 $pa $inc $vsys $center,$center units=arcmin \
+  rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
     fixed=vsys,pa,xpos,ypos \
     rotcur1="core,$v0,$r0*60*2,$m,1,1,1" resid=$run.resid
 endif
@@ -280,11 +279,11 @@ echo "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"    > $run.tmprotcur
 tabcomment $run.rotcur - delete=t                              >> $run.tmprotcurtab
 sort -n $run.tmprotcurtab                                       > $run.rotcurtab
 
-tabplot $run.rotcurtab 1 4 0 800 -10 110 dycol=5 line=1,1 point=2,0.1 ycoord=0,$v0 xcoord="$beam*60.0" yapp=$yapp
+tabplot $run.rotcurtab 1 4 0 800 -10 $v0+10 dycol=5 line=1,1 point=2,0.1 ycoord=0,$v0 xcoord="$beam*60.0" yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
-tabplot $run.rc0       1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
+tabplot $run.rc0       1 2 0 800 -10 $v0+10 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
-tabplot $run.rotmod    1 2 0 800 -10 110 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
+tabplot $run.rotmod    1 2 0 800 -10 $v0+10 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
 
 if (1) then
@@ -300,7 +299,7 @@ if (1) then
   endif
   ccdtrace $run.vel - $run.ma1.tab | tabmath - $run.ma1.vel %1,%3 all
   ccdtrace $run.vel - $run.ma2.tab | tabmath - $run.ma2.vel %1,%3 all    
-  paste $run.ma1.vel $run.ma2.vel | tabmath - - "%1*60,(%4-%2)/2/sind($inc),(%4+%2)/2" all > $run.rc00
+  paste $run.ma1.vel  $run.ma2.vel | tabmath - - "%1*60,(%4-%2)/2/sind($inc),(%4+%2)/2" all > $run.rc00
 
   tabmath $run.rotcurtab $run.rotcurrad %1 all
   
@@ -310,25 +309,25 @@ if (1) then
   tabspline $run.rotmod x=@$run.rotcurrad | tabmath - - 0 > $run.rcmod
   
   paste $run.rcring $run.rcslit $run.rcmod                > $run.rccmp
-  tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 110 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
+  tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 $v0+10 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
   echo "=== Fitting $run.rcmod ==="
-  tabnllsqfit $run.rcmod  load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  tabnllsqfit $run.rcmod  load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999
   echo "=== Fitting $run.rcslit ==="  
-  tabnllsqfit $run.rcslit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  tabnllsqfit $run.rcslit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999
   echo "=== Fitting $run.rcring ==="  
-  tabnllsqfit $run.rcring load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999
+  tabnllsqfit $run.rcring load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999
   set fit=$run.rcslit
   set fit=$run.rcring
   echo "===Now using $fit for plots ==="
-  tabnllsqfit $fit       load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:999 out=$run.rc.fit
+  tabnllsqfit $fit       load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 out=$run.rc.fit
   if ($status) then
-     rm $run.rc.fit  
-     tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*1.5,$m" xrange=1:999 out=$run.rc.fit
+     rm $run.rc.fit
+     tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*1.5,$m" xrange=1:9999 out=$run.rc.fit
      if ($status) then
           rm $run.rc.fit
-          tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*3,$m" xrange=1:999 out=$run.rc.fit
+          tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*3,$m" xrange=1:9999 out=$run.rc.fit
      endif
   endif
   tabplot $run.rc.fit 1 2,3 line=1,1 color=2,4 ycoord=0 xcoord=0 yapp=$yapp
@@ -337,7 +336,7 @@ if (1) then
   echo 0 0 0       > $run.rc.fit0
   cat $run.rc.fit >> $run.rc.fit0
   paste $run.rccmp $run.rc.fit0    > $run.rccmp2
-  tabplot $run.rccmp2  1,4,7,1  2,5,8,12  0 160 -10 110 color=4,2,3,4 line=1,1 point=2,0.1 dycol=3,6,9,9 ycoord=0,$v0 yapp=$yapp
+  tabplot $run.rccmp2  1,4,7,1  2,5,8,12  0 160 -10 $v0+10 color=4,2,3,4 line=1,1 point=2,0.1 dycol=3,6,9,9 ycoord=0,$v0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
 endif
@@ -357,7 +356,7 @@ tabmath $run.linfit - %2-%3 |\
 
 # fit an exponential growth  y=v0*(1-exp(-x/r0)) that has a nice linear part in center
 # and plot the residual, look at some stats etc.
-tabnllsqfit $run.rotcurtab 1 4 fit=grow par=100,60 free=1,1 out=$run.fit > $run.fitlog
+tabnllsqfit $run.rotcurtab 1 4 fit=grow par="$v0,$r0*60" free=1,1 out=$run.fit > $run.fitlog
 cat $run.fitlog
 set a=`grep ^a= $run.fitlog | awk '{print $2}'`
 set b=`grep ^b= $run.fitlog | awk '{print $2}'`
@@ -365,7 +364,7 @@ echo Fitted slope: `nemoinp $a/$b`
 
 # overall
 tabmath $run.fit - %2-%3 |\
- tabplot - 1 2,3,4 0 800 -10 110  color=2,3,4 line=1,1 point=2,0.05 ycoord=0,$v0 xcoord=0 yapp=$yapp
+ tabplot - 1 2,3,4 0 800 -10 $v0+10  color=2,3,4 line=1,1 point=2,0.05 ycoord=0,$v0 xcoord=0 yapp=$yapp
  set yapp=`printf $yapps $yappn` ; @ yappn++ 
 
 # center part
@@ -373,7 +372,7 @@ tabmath $run.fit - %2-%3 |\
  tabplot - 1 2,3,4 0 160 -16 16   color=2,3,4 line=1,1 point=2,0.2 ycoord=0 xcoord="$beam*60.0" headline=expfit yapp=$yapp
  set yapp=`printf $yapps $yappn` ; @ yappn++ 
 tabmath $run.fit - %2-%3 |\
- tabplot - 1 2,3,4 0 80 0 80   color=2,3,4 line=1,1 point=2,0.2 ycoord=0 xcoord="$beam*60.0" headline=expfit yapp=$yapp
+ tabplot - 1 2,3,4 0 80 0 80      color=2,3,4 line=1,1 point=2,0.2 ycoord=0 xcoord="$beam*60.0" headline=expfit yapp=$yapp
  set yapp=`printf $yapps $yappn` ; @ yappn++ 
  
 
