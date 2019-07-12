@@ -69,3 +69,8 @@ test2:
 	     mv run.log run_$$m:$$beam ;\
           done ;\
 	done
+
+# test if scaling produces the same (scaled) results
+test3:
+	rm -rf model0a; $(MKGALCUBE) run=model0a r0=2 re=2 beam=2 v0=200 vrange=300 step=20 rmax=30 range=32 sigmav=10
+	rm -rf model0b; $(MKGALCUBE) run=model0b r0=1 re=1 beam=1 v0=100 vrange=150 step=10 rmax=15 range=16 sigmav=5
