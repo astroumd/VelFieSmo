@@ -127,7 +127,7 @@ $$
 and in a constant density disk this simplifies to
 $$
 \delta =  {b^2\over 2} \nabla V =  {b^2\over 2} {1\over r^2}   {\partial^2{V}\over\partial{\phi^2}}        \eqno(11)
-$$
+$$ 
 or if my math was done right
 $$
 \delta =  {-\alpha} { b^2\over 2} {1\over r^2}
@@ -149,5 +149,25 @@ and $m$, but not much, if any, $V_0$.   We call the fitted
 values ($V_1,R_1,m_1$). We can create a grid of such models,
 and retrieve the input model
 ($V_0,R_0,m$) from this.  [degeneracy TBD]
+
+\section{Random Notes}
+
+\subsection{exp vs. core}
+
+Comparing Greisen's ``exp'' curve with the ``core-m'' family, the m=2 curve crosses over around $R/R_0 \approx 3$. Doing a fit
+of the exp to core-m has the usual mixed results:   shape=(V0=102.43,R0=154.07,m=2.05),
+mod=(102.9,146.7,1.91), slit=(102.7,146.7,1.91) and ring=(103.9,136.3,1.72), which certainly visually agrees with $m \approx 1.8-2.2$.
+See also {\tt model\_rot\_curve.py}.
+
+\subsection{kinematic inclination}
+
+In our fits we fix the inclination to the morphological inclination. The kinematic inclination is typically a few degrees lower
+than the morphological one, see {\tt smooth\_inc.py}. Either way, a residual velocity field always shows the familiar $3\phi$ symmetry.
+
+\subsection{rotcur fitting}
+
+Fitting using rotcur often over-estimates. Near the center this is understandable, since there are few points, but in some cases
+in the outer parts this is also visible. Hence we started using rotcurshape, but given the kinematic inclination effect, the slit
+and shape will then give different results.
 
 \end{document}                     
