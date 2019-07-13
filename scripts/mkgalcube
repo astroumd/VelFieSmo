@@ -74,7 +74,9 @@ set noise=0                # add optional noise to cube
 set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
 set clip=0                 # clipping level for cube
 
-set clump=0                # number between 0 and 1   0=no clumpy 1=very clumpy    smoothing will affect this too
+set clump=0                # number between 0 and 1   0=no clumpy 1=very clumpy    smoothing will affect this too [deprecated]
+set cbody=0                # set to a finite number to have clump bodies (2000 is pretty good)
+set cbeam=1                # beam to smooth clumps with (1 or 2 seems good)
 
 set restfreq=1.420405751786 # HI restfreq in GHz 
 
@@ -152,10 +154,23 @@ echo mkgalcube version $version using yapps=$yapps
 echo Creating disk with $nbody particles and concentration parameter $mc
 echo Rotation Curve model=$model
 
-mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
+if ($cbody) then
+  echo Trying out a clumpy ISM
+  mkdisk out=- nbody=$cbody seed=$seed mass=1 rmax="$rmax*1.5" |\
+    snapgrid - - $grid_pars  |\
+    ccdsmooth - $run.clumps $cbeam
+  mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
+       $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
+    snaprotate - - "$inc,$pa" yz |\
+    snapmass - $run.20 ccd=$run.clumps 
+       
+
+else
+  mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
        $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
        snapmass - - "mass=$mass*xrandom(1-$clump,1+$clump)" |\
     snaprotate - $run.20 "$inc,$pa" yz
+endif
 
 set name1=`echo $model[1] | awk -F= '{print $2}'`
 set pars1=`echo $model[2] | awk -F= '{print $2}'`
