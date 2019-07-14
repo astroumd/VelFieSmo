@@ -14,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.7  11-jul-2019"
+set version = "1.8  13-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -23,6 +23,7 @@ set version = "1.7  11-jul-2019"
 #   1.4  3-jul-2019    Constant disk velocity dispersion option
 #   1.5  9-jul-2019    rotcurshape (note: rotcurm == core), order r0,v0
 #   1.6 10-jul-2019    defaults changed (step, seed)
+#   1.8 13-jul-2019    clumpy ISM with (cbody,cbeam,cmap)
 #
 #   todo:              Becca method
 #                      Gigi method
@@ -74,9 +75,9 @@ set noise=0                # add optional noise to cube
 set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
 set clip=0                 # clipping level for cube
 
-set clump=0                # number between 0 and 1   0=no clumpy 1=very clumpy    smoothing will affect this too [deprecated]
 set cbody=0                # set to a finite number to have clump bodies (2000 is pretty good)
 set cbeam=1                # beam to smooth clumps with (1 or 2 seems good)
+set cmap=0                 # A prepared CCD image 
 
 set restfreq=1.420405751786 # HI restfreq in GHz 
 
@@ -141,6 +142,7 @@ if (-e $run) then
   echo Directory $run already exists
   exit 1
 else
+  set odir=`pwd`
   mkdir $run
   cd $run
 endif  
@@ -154,21 +156,35 @@ echo mkgalcube version $version using yapps=$yapps
 echo Creating disk with $nbody particles and concentration parameter $mc
 echo Rotation Curve model=$model
 
-if ($cbody) then
-  echo Trying out a clumpy ISM
-  mkdisk out=- nbody=$cbody seed=$seed mass=1 rmax="$rmax*1.5" |\
-    snapgrid - - $grid_pars  |\
-    ccdsmooth - $run.clumps $cbeam
+if ($cbody || $cmap != 0) then
+  if ($cbody) then
+    echo Disk with clumpy ISM  cbody=$cbody cbeam=$cbeam
+    mkdisk out=- nbody=$cbody seed=$seed mass=1 rmax="$rmax*1.5" |\
+      snapgrid - - $grid_pars  |\
+      ccdsmooth - $run.clumps $cbeam
+  else
+    set cmap=`(cd $odir; readlink -f $cmap)`
+    echo Assuming cmap=$cmap
+    ln -s $cmap $run.clumps
+    if (! -e $cmap) then
+      echo cmap=$cmap does not exist
+      exit 1
+    endif
+  endif
   mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
        $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
     snaprotate - - "$inc,$pa" yz |\
-    snapmass - $run.20 ccd=$run.clumps 
-       
-
+    snapmass - $run.20 ccd=$run.clumps
+    # if you switch rotate & mass it implies the clumps are intrinsically that shape
+    # in the current rotate < mass smoothing is implied to cause their apparent
+    # circular shape
+else if ($cmap) then
+  echo CMAP not implemented yet
 else
+  echo Standard disk with mass=$mass
   mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
        $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
-       snapmass - - "mass=$mass*xrandom(1-$clump,1+$clump)" |\
+       snapmass - - "mass=$mass" |\
     snaprotate - $run.20 "$inc,$pa" yz
 endif
 
