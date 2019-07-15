@@ -3,3 +3,24 @@ Datasets:
 
 N6503:    Greisen's ftp 
 N2403:    https://bbarolo.readthedocs.io/en/latest/_downloads/ngc2403.fits
+M51:      https://casaguides.nrao.edu/images/3/3f/M51ha.fits.txt
+
+
+
+Notes:
+
+m51:
+
+This FITS file is clipped at 1000 !!! (for casaguides historic reasons)
+	  
+curl https://casaguides.nrao.edu/images/3/3f/M51ha.fits.txt -f -o M51ha.fits
+now fitsedit the header to make it work with the modeling software. Recall
+the modeling works in arcmin, not in FITS's degrees. Also the galaxy center
+needs to be physical (0,0). Need to cover to rmax=16 (the default in mkgalcube):
+    CRVAL1 = 0
+    CRVAL2 = 0
+    CDELT1 = 0.032
+    CDELT2 = 0.032
+No need to change CRPIX, although it's somewhat suspiciously at (512,512) for
+this 1024 x 1024 image.
+    fitsccd M51ha.fits - | ccdflip - - xy | ccdflip - M51ha.ccd y
