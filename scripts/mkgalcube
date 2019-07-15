@@ -14,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.9  15-jul-2019"
+set version = "1.10  15-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -25,6 +25,7 @@ set version = "1.9  15-jul-2019"
 #   1.6 10-jul-2019    defaults changed (step, seed)
 #   1.8 13-jul-2019    clumpy ISM with (cbody,cbeam,cmap)
 #   1.9 15-jul-2019    Add masked maps, add bad smoothing examples
+#   1.10               output in a FITTING line ready for table
 #
 #   todo:              Becca method
 #                      Gigi method
@@ -314,12 +315,12 @@ rotcur $run.vel ${maxring}:0:-$step $v0 $pa $inc $vsys $center,$center units=arc
 
 rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
     fixed=vsys,pa,inc,xpos,ypos \
-    rotcur1="core,$v0,$r0*60,$m,1,1,1" resid=$run.resid
+    rotcur1="core,$v0,$r0*60,$m,1,1,1" resid=$run.resid tab=$run.rcs 
 if ($status) then
   rm $run.resid
   rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
     fixed=vsys,pa,xpos,ypos \
-    rotcur1="core,$v0,$r0*60*2,$m,1,1,1" resid=$run.resid
+    rotcur1="core,$v0,$r0*60*2,$m,1,1,1" resid=$run.resid tab=$run.rcs 
 endif
     
 # make a rotation curve where (0,0) is included and make sure it's sorted by radius
@@ -363,21 +364,27 @@ if (1) then
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
   echo "=== Fitting $run.rcmod ==="
-  tabnllsqfit $run.rcmod  load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999
+  tabnllsqfit $run.rcmod  load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 > $run.fit1
+  cat $run.fit1
   echo "=== Fitting $run.rcslit ==="  
-  tabnllsqfit $run.rcslit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999
+  tabnllsqfit $run.rcslit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 > $run.fit2
+  cat $run.fit2  
   echo "=== Fitting $run.rcring ==="  
-  tabnllsqfit $run.rcring load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999
+  tabnllsqfit $run.rcring load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 > $run.fit3
+  cat $run.fit3  
   set fit=$run.rcslit
   set fit=$run.rcring
   echo "===Now using $fit for plots ==="
-  tabnllsqfit $fit       load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 out=$run.rc.fit
+  tabnllsqfit $fit       load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 out=$run.rc.fit > $run.fit4
+  cat $run.fit4
   if ($status) then
      rm $run.rc.fit
-     tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*1.5,$m" xrange=1:9999 out=$run.rc.fit
+     tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*1.5,$m" xrange=1:9999 out=$run.rc.fit > $run.fit4
+     cat $run.fit4     
      if ($status) then
           rm $run.rc.fit
-          tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*3,$m" xrange=1:9999 out=$run.rc.fit
+          tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*3,$m" xrange=1:9999 out=$run.rc.fit > $run.fit4
+          cat $run.fit4	  
      endif
   endif
   tabplot $run.rc.fit 1 2,3 line=1,1 color=2,4 ycoord=0 xcoord=0 yapp=$yapp
@@ -430,6 +437,23 @@ tabmath $run.fit - %2-%3 |\
 tabhist $run.rotcurtab 15 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
 
+
+# assemble useful output for the project
+set vslit  = `grep ^p0 $run.fit2 | awk '{print $2}'`
+set rslit  = `grep ^p1 $run.fit2 | awk '{print $2}'`
+set mslit  = `grep ^p2 $run.fit2 | awk '{print $2}'`
+
+set vring  = `grep ^p0 $run.fit4 | awk '{print $2}'`
+set rring  = `grep ^p1 $run.fit4 | awk '{print $2}'`
+set mring  = `grep ^p2 $run.fit4 | awk '{print $2}'`
+
+set vshape = `grep ^P1: $run.rcs | awk '{print $2}'`
+set rshape = `grep ^P2: $run.rcs | awk '{print $2}'`
+set mshape = `grep ^P3: $run.rcs | awk '{print $2}'`
+
+echo 'FITTING: $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape'
+echo "FITTING: $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape"
+# FITTING: 99.7802 152.337 2.03116   101.975 150.049 2.15612   101.975 162.237 2.52155 for default model0 
 
 if ($clean) then
    rm $run.[0-9]*
