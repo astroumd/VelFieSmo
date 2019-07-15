@@ -14,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.8  13-jul-2019"
+set version = "1.9  15-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -24,6 +24,7 @@ set version = "1.8  13-jul-2019"
 #   1.5  9-jul-2019    rotcurshape (note: rotcurm == core), order r0,v0
 #   1.6 10-jul-2019    defaults changed (step, seed)
 #   1.8 13-jul-2019    clumpy ISM with (cbody,cbeam,cmap)
+#   1.9 15-jul-2019    Add masked maps, add bad smoothing examples
 #
 #   todo:              Becca method
 #                      Gigi method
@@ -200,8 +201,10 @@ mkplummer - 1 | snapgrid - $run.1p $grid_pars
 ccdsmooth $run.1p $run.1beam $beam
 
 echo "Creating a velocity field - method 2"
-snapgrid $run.20 $run.30 $grid_pars \
-    zrange=-${vrange}:${vrange} nz=$nvel mean=f evar=m
+snapgrid $run.20 $run.30 $grid_pars zrange=-${vrange}:${vrange} nz=$nvel mean=f evar=m
+
+# create a "mask" for later
+ccdmom $run.30 $run.mask axis=3 mom=0
 
 echo RAW CUBE STATS: $run.30
 ccdstat $run.30 bad=0
@@ -229,16 +232,18 @@ ccdstat $run.32 bad=0
 ccdmom $run.32 $run.33d axis=3 mom=0 clip=$clip
 ccdmom $run.32 $run.33v axis=3 mom=1 clip=$clip rngmsk=true
 ccdmom $run.32 $run.33s axis=3 mom=2 clip=$clip
+# masked versions
+ccdmath $run.33d,$run.mask $run.33dm 'ifeq(%2,0,0,%1)'
+ccdmath $run.33v,$run.mask $run.33vm 'ifeq(%2,0,0,%1)'
+ccdmath $run.33s,$run.mask $run.33sm 'ifeq(%2,0,0,%1)'
 
 ccdmom $run.32 $run.34v axis=3 mom=3  peak=0 clip=$clip  # peak
 ccdmom $run.32 $run.35v axis=3 mom=31 peak=0 clip=$clip
 ccdmom $run.32 $run.36v axis=3 mom=31 peak=1 clip=$clip  # peak
 
 if (1) then
-    ccdmom $run.30 $run.mask axis=3 mom=0 
-    ccdmath $run.33d,$run.mask $run.33dm 'ifeq(%2,0,0,%1)'
-    echo DISK FLUCTUATIONS:
-    ccdstat $run.33dm bad=0
+  echo DISK FLUCTUATIONS:
+  ccdstat $run.33dm bad=0
 endif
 
 if ($vel == mom) then
@@ -249,6 +254,18 @@ else
   echo Invalid vel=$vel method
   exit 1
 endif
+
+if (1) then
+  echo Example how not to smooth, results in $run.34'*'
+  ccdmom $run.30 - axis=3 mom=0 clip=$clip             | ccdsmooth - $run.34d $beam
+  ccdmom $run.30 - axis=3 mom=1 clip=$clip rngmsk=true | ccdsmooth - $run.34v $beam
+  ccdmom $run.30 - axis=3 mom=2 clip=$clip             | ccdsmooth - $run.34s $beam
+  ccdmath $run.34v,$run.mask $run.34vm 'ifeq(%2,0,0,%1)'
+  ccdmath $run.34v,$run.mask $run.34vm 'ifeq(%2,0,0,%1)'
+  ccdmath $run.34s,$run.mask $run.34sm 'ifeq(%2,0,0,%1)'
+endif
+
+
 
 # 35v and 33v are identical
 
@@ -340,6 +357,8 @@ if (1) then
   tabspline $run.rotmod x=@$run.rotcurrad | tabmath - - 0 > $run.rcmod
   
   paste $run.rcring $run.rcslit $run.rcmod                > $run.rccmp
+  tabplot $run.rccmp  1,4,7  2,5,8  0 800 -10 $v0+10 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
+  set yapp=`printf $yapps $yappn` ; @ yappn++
   tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 $v0+10 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
