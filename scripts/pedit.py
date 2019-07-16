@@ -1,0 +1,43 @@
+#! /usr/bin/env python
+#
+#   parameter editor for "keyword    value"  parameter files
+#
+#   Usage:   pedit [options] pfile a=1 f="'a.fits'"
+#
+#
+#   @todo   error checking
+#           implement some options:
+#             -g : grep like function
+#             -c : pick comment character?
+#             -m : mode (e.g. using '=' between key and val)
+
+
+import sys
+
+
+filename = sys.argv[1]
+eqmode   = False
+
+kv = {}
+
+for keyval in sys.argv[2:]:
+    ieq = keyval.find('=')
+    key = keyval[:ieq]
+    val = keyval[ieq+1:]
+    kv[key] = val
+
+lines = open(filename).readlines()
+
+for line in lines:
+    w = line.split()
+    if len(w) > 1:
+        if w[0] in kv:
+            if eqmode:
+                print("%s = %s" % (w[0],kv[w[0]]))
+            else:
+                print("%s   %s" % (w[0],kv[w[0]]))
+        else:
+            print(line.strip())
+    else:
+        print(line.strip())        
+        
