@@ -319,7 +319,7 @@ rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
 if ($status) then
   rm $run.resid
   rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
-    fixed=vsys,pa,xpos,ypos \
+    fixed=vsys,pa,inc,xpos,ypos \
     rotcur1="core,$v0,$r0*60*2,$m,1,1,1" resid=$run.resid tab=$run.rcs 
 endif
     
