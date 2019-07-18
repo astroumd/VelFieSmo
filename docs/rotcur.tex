@@ -137,18 +137,20 @@ $$
 \section{Pragmatic Fitting}
 
 
-The explicit nature of eq. (5) means we cannot compute the model from the observations,
+The explicit nature of eq. (5) means we cannot compute the model directly from the observations,
 except under special circumstances, e.g. assuming a flat rotation curve [sic] and/or
-constant density disk. However, for a parameterized rotation curve a model can be derived:
+constant density disk. However, for a parameterized rotation curve a model can be derived as
+follows:
 
 Using the family of models in eq.(2) we have three model parameters
-($V_0,R_0,m$). For given beam size $B$ this will result in a new
+($V_0,R_0,m$), of which only $m$ is a scale-free (shape) parameter.
+For given beam size $B$ this will result in a new
 rotation curve, but generally with a different shape,
 will affect mostly $R_0$
 and $m$, but not much, if any, $V_0$.   We call the fitted
 values ($V_1,R_1,m_1$). We can create a grid of such models,
 and retrieve the input model
-($V_0,R_0,m$) from this.  [degeneracy TBD]
+($V_0,R_0,m$) from this. Degeneracies are of course possible.
 
 \section{Random Notes}
 
@@ -169,5 +171,14 @@ than the morphological one, see {\tt smooth\_inc.py}. Either way, a residual vel
 Fitting using rotcur often over-estimates. Near the center this is understandable, since there are few points, but in some cases
 in the outer parts this is also visible. Hence we started using rotcurshape, but given the kinematic inclination effect, the slit
 and shape will then give different results.
+
+\subsection{Missing Features in these Models}
+
+There are still a few things missing about these models that make them look somewhat unrealistic.  Perhaps the most obvious one being
+the absence of spiral arms, bars, or clumps in general. We do have an option to create clumpy galaxies and study the rotation curves
+under different seeds.
+Another feature of galaxies is thin and thick disks rotatating at
+different speeds. The models discussed here are all infinitesimally thin, but the modeling code has options to change this.
+
 
 \end{document}                     
