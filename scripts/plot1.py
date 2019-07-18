@@ -118,3 +118,24 @@ plt.grid()
 plt.legend()
 plt.savefig('fig1d-All_%s.pdf' % table1)
 plt.show()
+
+
+# now fix m
+
+
+plt.figure(5)
+for ur1 in ur:
+    mask = ((re==ur1) & (m==mpick))
+    x = np.extract(mask, 60*b/r1)
+    y = np.extract(mask, m1)
+    i = x.argsort()
+    x = x[i]
+    y = y[i]
+    plt.plot(x,y,'-o',label='re=%g'%ur1)
+plt.title(title + " $m=%g$" % mpick)
+plt.xlabel('$B/R_1$')
+plt.ylabel('$m_1$')
+plt.grid()
+plt.legend()
+plt.savefig('fig1e-%s.pdf' % title)
+plt.show()
