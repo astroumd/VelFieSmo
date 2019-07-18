@@ -14,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.10  15-jul-2019"
+set version = "1.10  17-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -451,9 +451,9 @@ set vshape = `grep ^P1: $run.rcs | awk '{print $2}'`
 set rshape = `grep ^P2: $run.rcs | awk '{print $2}'`
 set mshape = `grep ^P3: $run.rcs | awk '{print $2}'`
 
-echo 'FITTING: $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape'
-echo "FITTING: $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape"
-# FITTING: 99.7802 152.337 2.03116   101.975 150.049 2.15612   101.975 162.237 2.52155 for default model0 
+echo 'FITTING: $m $beam $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape'
+echo "FITTING: $m $beam $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape"
+# FITTING: 2 1 99.7802 152.337 2.03116   101.975 150.049 2.15612   101.975 162.237 2.52155 for default model0 
 
 if ($clean) then
    rm $run.[0-9]*
