@@ -58,6 +58,19 @@ test1b:
 ngc6503:
 	$(MKGALCUBE) run=ngc6503 step=10 pa=-60 v0=115 r0=0.15 m=2 beam=0.23 vsys=28 sigmav=8
 
+# rms=0.0007  robust=0.00057
+ngc6503fit:
+	fitsccd ../data/ngc6503vrad.fits ngc6503.ccd error=1
+	ccdmom ngc6503.ccd ngc6503den.ccd mom=0 clip=0.001 error=1
+	ccdmom ngc6503.ccd ngc6503vel.ccd mom=1 rngmsk=t clip=0.003 error=1
+	rotcurshape ngc6503vel.ccd 0,600 -60 74 28 162,122 rotcur1=core,115,50,2,1,1,1  fix=vsys,xpos,ypos,pa,inc
+# exp  -> 117.2 (0.1)  27.0 (0.3)               rms=4.0
+# core -> 117.2 (0.1)  48.8 (0.6)  4.1 (0.2)    rms=3.9
+# density fit shows exp scalelength about 358 \pm 5, i.e. RE/R1=7.3
+# B/R1 = 0.287 -> m0 ~ 4.5 ->  R1/R0 ~ 1.1 -> R0 ~ 44
+# (44,4.5) --[14]-> (49,4.1)
+
+
 
 fig1:
 	rm -rf fig1; $(MKGALCUBE) run=fig1 step=10 beam=2 m=2
@@ -84,8 +97,8 @@ test3:
 run4:
 	rm -rf run4_*
 	for re in 0.5 1 2 3 4 5 6 10 100 1000; do \
-	 for m in 1 1.5 2 2.5 3 3.5 4; do \
-	  for beam in 0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.5 3 3.5 4 ; do \
+	 for m in 1 1.5 2 2.5 3 3.5 4 4.5 5; do \
+	  for beam in 0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.5 3 3.5 4 5 6 8 ; do \
 	     echo M=$$m RE=$$re BEAM=$$beam ;\
 	     $(MKGALCUBE) run=run4_$$m:$$re:$$beam m=$$m re=$$re beam=$$beam > run.log 2>&1 ;\
 	     mv run.log run4_$$m:$$re:$$beam ;\
