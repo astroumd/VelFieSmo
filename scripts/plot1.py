@@ -4,6 +4,7 @@
 #
 #  grep FITTING run4_*/run.log  | grep -v beam | awk -F: '{print $5}' | awk '{if (NF==12) print $0}' | grep -v "100 120" > plot1.tab
 #
+#  this produces a table with 12 columns and many rows.
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,10 +16,10 @@ vpick = 3             # pick which one:   1=slit 2=ring 3=shape
 
 # get data
 (m,re,b,vslit,rslit,mslit,vring,rring,mring,vshape,rshape,mshape) = np.loadtxt(table1).T
-r0 = 120
-v0 = 100
+r0 = 120   # scaling value (see mkgalcube) - we keep them constant
+v0 = 100   # scaling value (see mkgalcube) - we keep them constant
 
-# get all uniq m's and re's
+# get all uniq input parameters (m, re and beam)
 um = np.unique(m)
 ur = np.unique(re)
 ub = np.unique(b)
@@ -26,8 +27,8 @@ print("Unique m    :" , um)
 print("Unique re   :" , ur)
 print("Unique beam :" , ub)
 # pick something in case you want to fix those (2,2,1) are the defaults in mkgalcube
-mpick = 2
-rpick = 2
+mpick = 4
+rpick = 4
 bpick = 1
 
 # pick one of the three fitting methods
@@ -138,4 +139,23 @@ plt.ylabel('$m_1$')
 plt.grid()
 plt.legend()
 plt.savefig('fig1e-%s.pdf' % title)
+plt.show()
+
+
+
+plt.figure(6)
+for ur1 in ur:
+    mask = ((re==ur1) & (m==mpick))
+    x = np.extract(mask, 60*b/r1)
+    y = np.extract(mask, r1/r0)
+    i = x.argsort()
+    x = x[i]
+    y = y[i]
+    plt.plot(x,y,'-o',label='re=%g'%ur1)
+plt.title(title + " $m=%g$" % mpick)
+plt.xlabel('$B/R_1$')
+plt.ylabel('$R_1/R_0$')
+plt.grid()
+plt.legend()
+plt.savefig('fig1f-%s.pdf' % title)
 plt.show()
