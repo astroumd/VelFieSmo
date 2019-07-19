@@ -313,15 +313,14 @@ rotcur $run.vel ${maxring}:0:-$step $v0 $pa $inc $vsys $center,$center units=arc
     fixed=vsys,pa,inc,xpos,ypos \
     tab=$run.rotcur $dens             >& $run.rotcurlog
 
-rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
-    fixed=vsys,pa,inc,xpos,ypos \
-    rotcur1="core,$v0,$r0*60,$m,1,1,1" resid=$run.resid tab=$run.rcs 
-if ($status) then
-  rm $run.resid
+# loop over a few increasing radii to try and fit
+foreach fac (1 2 3 4)
+  rm -f $run.resid
   rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
     fixed=vsys,pa,inc,xpos,ypos \
-    rotcur1="core,$v0,$r0*60*2,$m,1,1,1" resid=$run.resid tab=$run.rcs 
-endif
+    rotcur1="core,$v0,$r0*60*$fac,$m,1,1,1" resid=$run.resid tab=$run.rcs 
+  if ($status == 0) break
+end
     
 # make a rotation curve where (0,0) is included and make sure it's sorted by radius
 echo "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"    > $run.tmprotcurtab
