@@ -374,18 +374,14 @@ if (1) then
   set fit=$run.rcslit
   set fit=$run.rcring
   echo "===Now using $fit for plots ==="
-  tabnllsqfit $fit       load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 out=$run.rc.fit > $run.fit4
-  cat $run.fit4
-  if ($status) then
-     rm $run.rc.fit
-     tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*1.5,$m" xrange=1:9999 out=$run.rc.fit > $run.fit4
-     cat $run.fit4     
-     if ($status) then
-          rm $run.rc.fit
-          tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*3,$m" xrange=1:9999 out=$run.rc.fit > $run.fit4
-          cat $run.fit4	  
-     endif
-  endif
+  foreach fac (1 2 3 4)
+    rm -f $run.rc.fit  
+    tabnllsqfit $fit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*$fac,$m" xrange=1:9999 out=$run.rc.fit > $run.fit4
+    if ($status == 0) then
+      cat $run.fit4
+      break
+    endif
+  end
   tabplot $run.rc.fit 1 2,3 line=1,1 color=2,4 ycoord=0 xcoord=0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
 
