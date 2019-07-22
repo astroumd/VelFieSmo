@@ -1,13 +1,8 @@
 #! /usr/bin/env python
 #
-#  brute force grid minimization
-#
-#  grep FITTING run4_*/run.log  | grep -v beam | awk -F: '{print $5}' | awk '{if (NF==12) print $0}' | grep -v "100 120" > plot1.tab
-#  tabmath plot1.tab - %2/%11,%3/%11,%12,%11/120,%1 all > plot1d.tab
-#
+#        brute force grid minimization
 
-import sys
-import math
+import sys, math
 import numpy as np
 import matplotlib.pyplot as plt
 
