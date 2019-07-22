@@ -5,6 +5,9 @@
 #  grep FITTING run4_*/run.log  | grep -v beam | awk -F: '{print $5}' | awk '{if (NF==12) print $0}' | grep -v "100 120" > plot1.tab
 #
 #  this produces a table with 12 columns and many rows that are plotted here
+#
+#  this version makes 12 subplots with various model and observation style relation ships for a graphical interpolation
+#  to turn (m1,R1,B) -> (m0,R0) where we ignore V1 (or assume V0=V1)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,7 +15,7 @@ import matplotlib.pyplot as plt
 #                     # pick a table
 table1 = 'plot1.tab'
 
-vpick = 3             # pick which one:   1=slit 2=ring 3=shape
+vpick = 3           # pick which one:   1=slit 2=ring 3=shape
 
 # get data
 (m,re,b,vslit,rslit,mslit,vring,rring,mring,vshape,rshape,mshape) = np.loadtxt(table1).T
@@ -27,8 +30,8 @@ print("Unique m    :" , um)
 print("Unique re   :" , ur)
 print("Unique beam :" , ub)
 # pick something in case you want to fix those (2,2,1) are the defaults in mkgalcube
-mpick = 1
-rpick = 0.5
+mpick = 2
+rpick = 4   #2 def.  try bracket 1 and 4
 bpick = 1
 
 # pick one of the three fitting methods
