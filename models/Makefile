@@ -9,7 +9,9 @@ MKGALCUBE = $(shell readlink -f ../scripts/mkgalcube)
 model0:
 	rm -rf model0
 	$(MKGALCUBE)
-	-(cd model0; Bbarolo -p ../../data/model0_galmod.par)
+	-(cd model0; Bbarolo -p ../../data/model0_galmod.par > b1.log)
+	-(cd model0; Bbarolo -p ../../data/model0_2dfit.par  > b2.log)
+	-(cd model0; Bbarolo -p ../../data/model0_3dfit.par  > b3.log)
 
 
 # test1:  see if bsc=begeman can work (so far, it cannot, or too much numerical pixel noise)
