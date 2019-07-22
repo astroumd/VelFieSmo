@@ -1,5 +1,5 @@
 FITSFILE    model0.fits
-OUTFOLDER   barolo
+OUTFOLDER   barolo_2dfit
 
 //   this is "rotcur"
 2DFIT       true

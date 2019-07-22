@@ -1,5 +1,5 @@
 FITSFILE    model0.fits
-OUTFOLDER   barolo
+OUTFOLDER   barolo_3dfit
 
 3DFIT       true
 
