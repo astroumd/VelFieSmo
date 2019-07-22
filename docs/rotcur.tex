@@ -7,7 +7,7 @@
 \section*{Beam Smearing of Galaxy Velocity Fields}
 
 % \bigskip\noindent
-Version: PJT 9-jul-2019
+Version: PJT 22-jul-2019
 
 
 \subsection*{Notation}
@@ -27,14 +27,19 @@ is a radius scale factor.  All rotation curves have the property they are linear
 either flatten off, or drop at larger radii.
 
 \noindent
-The first one is an unrealistic ``fixed shape'' exponentially (but see Greisen's eq.(2))
+The first one is an unrealistic but convenient ``fixed shape'' exponentially (but see Greisen's eq.(2))
 $$
 V = V_0 ( 1 - e^{-r} )         \eqno(1)
 $$
 Here is a family of curves defined by a shape parameter via
 the exponent $m$ (for $m -> \infty$ the linear+flat toy model is reproduced):
 $$
-V_m = V_0 {   {r}  \over  { (1+r^m)^{1/m} } }     \eqno(2)
+V_m = V_0 {   {r}  \over  { (1+r^m)^{1/m} } }     \eqno(2a)
+$$
+Solving for the radius where a fraction $f$ of the peak is reached (Greisen uses 99\% to denote
+this as $R_{max}$) one finds
+$$
+     R_f = R_0 { f \over { (1-f^m)^{1/m} } }     \eqno(2b)
 $$
 For $m=2$ this is the familiar logarithmic potential (BT, pp.45, eq. 2.54 and eq. 3.77) 
 $$
@@ -51,14 +56,14 @@ Levy's paper uses the universal Persic rotation curve profiles, with the $L_B/L_
 
 \section{N(R): Density Profile (mom0)}
 
-The gas density profile is independent of the rotation curve, so these need to be parameterized as well.
+The gas density profile is assumed independent of the rotation curve, so these need to be parameterized as well.
 Currently we have a exponential dropoff option (for constant take a very large $R_e$):
 $$
    N(R) = N_0 e^{-R/R_e}     \eqno(4)
 $$
 where roughly $R_e/R_{to} \approx 1.93 \pm 0.96$. Note the turnover radius $R_{to}$ and the
 beforementioned $R_0$ are not the same, their ratio $R_{to}/R_0 > 1$ but will approach 1 as
-$m$ gets very large.
+$m$ gets very large. We could equate $R_{to} = R_{99}$ ($R_{max}$ in Greisen).
    
    
 
@@ -67,11 +72,16 @@ $m$ gets very large.
 We normally assume the velocity dispersion of the gas to be constant as function of radius, but in order
 to study any possible degeneracy, we could relax this and e.g. assume a larger velocity dispersion in the
 central bulge regions.  We can use the same scaling radius ($R_0$ for this).   In the current modeling
-code we keep it constant.
+code we keep the velocity dispersion constant:
+$$
+   S(R) = S_0 
+$$
 
+   
 \section{Beam Smearing Correction (BSC): $\delta$}
 
-Begeman's 1989 BSC algorithm uses an implicit relationship between the Observed velocity, $v$, and the Model velocity, $V$, which we rewrite here as follows:
+Begeman's 1989 BSC algorithm uses an implicit relationship between the Observed velocity, $v$, and the Model velocity, $V$,
+which we summarize here as follows:
 $$
    v = V + \delta     \eqno(5)
 $$
