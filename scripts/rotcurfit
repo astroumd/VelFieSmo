@@ -1,0 +1,63 @@
+#! /bin/csh -f
+#
+#   GUI interface to some interactive fitting of rotation curves
+#   Also needs ds9 to set up looking at the residual velocity field
+#   The defaults are for one of the EDGE galaxies.
+#
+#>  IFILE   in=NGC5016.co.de20_dil.mom1.ccd
+#>  SCALE   r1=29                            10:50:1
+#>  SCALE   pa=240                           180:270:1
+#>  SCALE   inc=45                           30:80:1
+#>  SCALE   vsys=2596                        2550:2650:1
+#>  SCALE   xpos=50                          40:60:0.5
+#>  SCALE   ypos=50                          40:60:0.5
+#>  CHECK   fixed=vsys,xpos,ypos,inc,pa      vsys,xpos,ypos,inc,pa
+#>  SCALE   v0=175                           100:300:1
+#>  SCALE   r0=10                            1:50:0.5
+#>  SCALE   m0=3                             1:10:0.1
+#>  CHECK   free=v,r,m                       v,r,m
+#>  RADIO   shape=core                       core,exp
+#
+# Here is an example of automatically setting default:
+awk '{if ($1=="#>") print "set",$3}' $0 > $0.keys; source $0.keys
+
+#      parse command line args
+foreach a ($*)
+  set $a
+end
+
+set v=0
+set r=0
+set m=0
+echo $free | grep -q v; if ($status == 0) set v=1
+echo $free | grep -q r; if ($status == 0) set r=1
+echo $free | grep -q m; if ($status == 0) set m=1
+
+rm -rf resid.ccd
+
+if ($shape == core) then
+  set rotcur1="core,$v0,$r0,$m0,$v,$r,$m"
+else
+  set rotcur1="exp,$v0,$r0,$v,$r"
+endif
+
+echo SHAPE: $shape
+
+rotcurshape $in 0,$r1 $pa $inc $vsys $xpos,$ypos units=deg \
+        rotcur1="$rotcur1"  \
+        fixed=$fixed \
+	tab=- \
+	resid=resid.ccd \
+	 >& fit.log
+set retval=$?
+cat fit.log
+if (-e resid.ccd & ! -z resid.ccd ) nds9 resid.ccd
+
+echo fixed=$fixed
+echo free=$free
+echo retval=$retval
+
+
+echo rotcurshape NGC5016.co.de20_dil.mom1.ccd 0,$r1 $pa $inc $vsys $xpos,$ypos units=deg \
+        rotcur1="$rotcur1"  \
+        fixed=$fixed \
