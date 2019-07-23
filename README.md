@@ -5,7 +5,12 @@ Smoothing of Galactic Velocity Fields, a Summer 2019 Gradmap Study
 
 ## Installation
 
-Your python should have astropy, specutils, pyspeckit. Usually via pip. There are also conda channels.
+The following packages will be needed
+
+     * python: should have astropy, specutils, pyspeckit. Usually via pip. There are also conda channels.
+     * NEMO
+     * ds9
+
 
 ## Examples
 
@@ -21,3 +26,4 @@ One of the goals is to make a nice clean version of this script.
 
 
 
+The main modeling script is *mkgalcube* and the models/Makefile has example how to create a series of models.
