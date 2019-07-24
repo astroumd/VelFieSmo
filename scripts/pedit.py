@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+#   DEPRECATED, now called "pedit" in NEMO
 #
 #   parameter editor for "keyword    value"  parameter files
 #
