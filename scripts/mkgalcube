@@ -14,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "1.11  18-jul-2019"
+set version = "2.0 22-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -29,7 +29,6 @@ set version = "1.11  18-jul-2019"
 #
 #   todo:              Becca method
 #                      Gigi method
-#                      rotcurshape instead of rotcur
 
 
 #  Becca: for the EDGE-CALIFA galaxy sample from my 2018 paper, the
@@ -92,6 +91,9 @@ set clean=0                 # cleanup non-fits (NEMO) files?
 set vel=mom                 # what kind of velocity field to use (mom, peak, ....)
 set bsc=0                   # what kind of beam smearing correction (0, begeman, ...) [deprecated]
 
+set useinc=,inc             # normally INC is a fixed parameter, blank this keyword to make it free
+set barolo=0                # set to 1 if you want 2D and 3D models
+
 set yapps=yapp%d.ps/vcps    # yapp printf string (%d/xs, yapp%d.ps/vcps)
 set yappn=1                 # first yapp number
 
@@ -141,13 +143,16 @@ set model = (potname=rotcurm potpars=0,$v0,$r0,$m)
 
 #  make a directory $run, if it doesn't exist yet, else exit
 if (-e $run) then
-  echo Directory $run already exists
+  echo Directory run=$run already exists, use a different name or remove the directory
   exit 1
 else
   set odir=`pwd`
   mkdir $run
   cd $run
-endif  
+endif
+
+#  from version 2.0 onwards, we don't inherit the complex $run name, and just use 'run'
+set run=run
 
 #  keep a log, in case we call this routine multiple times
 echo `date` :: $* >> $run.history
@@ -256,7 +261,7 @@ else
   exit 1
 endif
 
-if (1) then
+if (0) then
   echo Example how not to smooth, results in $run.34'*'
   ccdmom $run.30 - axis=3 mom=0 clip=$clip             | ccdsmooth - $run.34d $beam
   ccdmom $run.30 - axis=3 mom=1 clip=$clip rngmsk=true | ccdsmooth - $run.34v $beam
@@ -310,14 +315,14 @@ endif
 # backward fitting rotcur (usually gets some extra points near the center)
 set maxring = `nemoinp "$rmax*60"`
 rotcur $run.vel ${maxring}:0:-$step $v0 $pa $inc $vsys $center,$center units=arcmin \
-    fixed=vsys,pa,inc,xpos,ypos \
+    fixed=vsys,pa,xpos,ypos$useinc \
     tab=$run.rotcur $dens             >& $run.rotcurlog
 
 # loop over a few increasing radii to try and fit
 foreach fac (1 2 3 4)
   rm -f $run.resid
   rotcurshape $run.vel 0,$maxring $pa $inc $vsys $center,$center units=arcmin \
-    fixed=vsys,pa,inc,xpos,ypos \
+    fixed=vsys,pa,xpos,ypos$useinc \
     rotcur1="core,$v0,$r0*60*$fac,$m,1,1,1" resid=$run.resid tab=$run.rcs 
   if ($status == 0) break
 end
@@ -365,9 +370,14 @@ if (1) then
   echo "=== Fitting $run.rcmod ==="
   tabnllsqfit $run.rcmod  load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 > $run.fit1
   cat $run.fit1
-  echo "=== Fitting $run.rcslit ==="  
-  tabnllsqfit $run.rcslit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 > $run.fit2
-  cat $run.fit2  
+  echo "=== Fitting $run.rcslit ==="
+  foreach fac (1 2 3 4)  
+    tabnllsqfit $run.rcslit load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60*$fac,$m" xrange=1:9999 > $run.fit2
+    if ($status == 0) then
+      cat $run.fit2
+      break
+    endif
+  end
   echo "=== Fitting $run.rcring ==="  
   tabnllsqfit $run.rcring load=$NEMOOBJ/fit/rotcurm.so fit=rotcurm par="$v0,$r0*60,$m" xrange=1:9999 > $run.fit3
   cat $run.fit3  
@@ -431,6 +441,21 @@ tabmath $run.fit - %2-%3 |\
 # histogram of residuals
 tabhist $run.rotcurtab 15 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
+
+if (-d $barolo) then
+  echo Running Bbarolo galmod
+  set pdir=$barolo
+  pedit $pdir/model0_galmod.par FITSFILE=run.fits INC=$inc > run_galmod.par
+  Bbarolo -p run_galmod.par > run_galmod.log
+  
+  pedit $pdir/model0_2dfit.par FITSFILE=run.fits INC=$inc > run_2dfit.par
+  Bbarolo -p run_2dfit.par > run_2dfit.log
+
+  pedit $pdir/model0_3dfit.par FITSFILE=run.fits INC=$inc > run_3dfit.par
+  Bbarolo -p run_3dfit.par > run_3dfit.log
+
+  # ../../scripts/rotcmp1.py
+endif
 
 
 # assemble useful output for the project
