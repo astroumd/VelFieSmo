@@ -111,14 +111,14 @@ run4:
 	done
 
 #       a disk at inc=46 (the default in mkgalcube actually).
-run4:
-	rm -rf run4_*
+run46:
+	rm -rf run46_*
 	for re in 0.5 1 2 3 4 5 6 10 100 1000; do \
 	 for m in 1 1.5 2 2.5 3 3.5 4 4.5 5; do \
 	  for beam in 0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.5 3 3.5 4 5 6 8 ; do \
 	     echo M=$$m RE=$$re BEAM=$$beam ;\
-	     $(MKGALCUBE) run=run4_$$m:$$re:$$beam m=$$m re=$$re beam=$$beam inc=46 > run.log 2>&1 ;\
-	     mv run.log run4_$$m:$$re:$$beam ;\
+	     $(MKGALCUBE) run=run46_$$m:$$re:$$beam m=$$m re=$$re beam=$$beam inc=46 > run.log 2>&1 ;\
+	     mv run.log run46_$$m:$$re:$$beam ;\
           done ;\
 	 done ;\
 	done
