@@ -97,13 +97,14 @@ test3:
 # Example to get the large table for plotting
 # grep FITTING run4_*/run.log  | grep -v beam | awk -F: '{print $5}' | awk '{if (NF==12) print $0}' | grep -v "100 120"
 
+#       a disk at inc=75 (the default in mkgalcube actually)
 run4:
 	rm -rf run4_*
 	for re in 0.5 1 2 3 4 5 6 10 100 1000; do \
 	 for m in 1 1.5 2 2.5 3 3.5 4 4.5 5; do \
 	  for beam in 0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.5 3 3.5 4 5 6 8 ; do \
 	     echo M=$$m RE=$$re BEAM=$$beam ;\
-	     $(MKGALCUBE) run=run4_$$m:$$re:$$beam m=$$m re=$$re beam=$$beam > run.log 2>&1 ;\
+	     $(MKGALCUBE) run=run4_$$m:$$re:$$beam m=$$m re=$$re beam=$$beam inc=75 > run.log 2>&1 ;\
 	     mv run.log run4_$$m:$$re:$$beam ;\
           done ;\
 	 done ;\
