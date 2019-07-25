@@ -97,7 +97,7 @@ test3:
 # Example to get the large table for plotting
 # grep FITTING run4_*/run.log  | grep -v beam | awk -F: '{print $5}' | awk '{if (NF==12) print $0}' | grep -v "100 120"
 
-#       a disk at inc=75 (the default in mkgalcube actually)
+#       a disk at inc=75 (the default in mkgalcube actually).
 run4:
 	rm -rf run4_*
 	for re in 0.5 1 2 3 4 5 6 10 100 1000; do \
