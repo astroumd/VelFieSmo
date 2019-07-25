@@ -94,6 +94,7 @@ test3:
 	rm -rf model0a; $(MKGALCUBE) run=model0a r0=2 re=2 beam=2 v0=200 vrange=300 step=20 rmax=30 range=32 sigmav=10
 	rm -rf model0b; $(MKGALCUBE) run=model0b r0=1 re=1 beam=1 v0=100 vrange=150 step=10 rmax=15 range=16 sigmav=5
 
+# Example to get the large table for plotting
 # grep FITTING run4_*/run.log  | grep -v beam | awk -F: '{print $5}' | awk '{if (NF==12) print $0}' | grep -v "100 120"
 
 run4:
@@ -108,8 +109,7 @@ run4:
 	 done ;\
 	done
 
-
-# M51 , from CASAGUIDES, but with different inclination and rotation curve of course
+# M51, from the CASAGUIDES, but with different inclination and rotation curve 
 SEED = 123
 BEAM = 1
 
