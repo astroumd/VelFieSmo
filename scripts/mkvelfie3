@@ -127,6 +127,22 @@ ccdmom $run.32 $run.35v axis=3 mom=31 peak=0 clip=$clip
 ccdmom $run.32 $run.36v axis=3 mom=31 peak=1 clip=$clip  # peak
 
 
+
+
+echo "Creating a velocity field - method 3"
+snapgrid $run.20 $run.41 $grid_pars moment=0 evar=m svar=$beam
+snapgrid $run.20 $run.42 $grid_pars moment=1 evar=m svar=$beam
+snapgrid $run.20 $run.43 $grid_pars moment=2 evar=m svar=$beam
+ccdmath $run.41,$run.42,$run.43 $run.40d %1
+ccdmath $run.41,$run.42,$run.43 $run.40v "%2/%1"
+ccdmath $run.41,$run.42,$run.43 $run.40s "sqrt(%3/%1-%2*%2/(%1*%1))"
+#  cutoff
+ccdmath $run.40d,$run.41 $run.41d "ifgt(%2,0,%1,0)"
+ccdmath $run.40v,$run.41 $run.41v "ifgt(%2,0,%1,0)"
+ccdmath $run.40s,$run.41 $run.41s "ifgt(%2,0,%1,0)"
+
+
+
 # PV slice based on $nsize/2
 ccdslice $run.31 - y $nsize/2-1:$nsize/2 | ccdmom - $run.pv 3 -1
 
