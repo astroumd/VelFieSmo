@@ -2,6 +2,9 @@
 #
 #  mkvelfie3:    make a velocity field with double smoothing and noise
 #
+#  NGC6503:    Distance       = 5.2 Mpc
+#              Inclination    = 75.1 degrees
+#              Position Angle = -60.1 degrees (receiding side)
 #  
 #  needs NEMO
 #  needs ds9    (make 4 frames for:  mom0, mom1, mom2, pv)
@@ -24,8 +27,8 @@ set v0=100                 # peak velocity
 set re=2                   # exponential scalelength of disk
 set rmax=6                 # edge of disk
 
-set pa=90                  # PA of disk on sky (E through N)
-set inc=60                 # INC of disk
+set pa=-60.1               # PA of disk on sky (E through N)
+set inc=75.1               # INC of disk
 set beam=0.1               # FWHM of (smaller) beam
 set beam2=0.2              # FWHM of (bigger) beam2
 set vbeam=0                # FWHM of spectral smoothing beam 
