@@ -6,11 +6,12 @@
 #
 #  this produces a table with 12 columns and many rows that are plotted here
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-#                     # pick a table
-table1 = 'plot1.tab'
+#                     # pick a table via the first command line argument
+table1 = sys.argv[1]
 
 vpick = 3             # pick which one:   1=slit 2=ring 3=shape
 

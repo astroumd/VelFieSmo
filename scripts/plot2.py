@@ -9,11 +9,12 @@
 #  this version makes 12 subplots with various model and observation style relation ships for a graphical interpolation
 #  to turn (m1,R1,B) -> (m0,R0) where we ignore V1 (or assume V0=V1)
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-#                     # pick a table
-table1 = 'plot1.tab'
+#                     # pick a table via the first command line argument
+table1 = sys.argv[1]
 
 vpick = 3           # pick which one:   1=slit 2=ring 3=shape
 
@@ -31,7 +32,7 @@ print("Unique re   :" , ur)
 print("Unique beam :" , ub)
 # pick something in case you want to fix those (2,2,1) are the defaults in mkgalcube
 mpick = 2
-rpick = 4   #2 def.  try bracket 1 and 4
+rpick = 0.5   #2 def.  try bracket 1 and 4
 bpick = 1
 
 # pick one of the three fitting methods
