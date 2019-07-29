@@ -6,11 +6,14 @@ import sys, math
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
 # get the observations
-oRe = float(sys.argv[1])
-oB  = float(sys.argv[2])
-oR1 = float(sys.argv[3])
-om1 = float(sys.argv[4])
+table1 = sys.argv[1]
+oRe = float(sys.argv[2])
+oB  = float(sys.argv[3])
+oR1 = float(sys.argv[4])
+om1 = float(sys.argv[5])
 
 print("Re = %g" % oRe)
 print("B  = %g" % oB)
@@ -18,7 +21,7 @@ print("R1 = %g" % oR1)
 print("m1 = %g" % om1)
 
 # get the grid data
-table1 = 'plot1.tab'
+
 (m,re,b,vslit,rslit,mslit,vring,rring,mring,vshape,rshape,mshape) = np.loadtxt(table1).T
 v1 = vshape;  r1 = rshape;  m1 = mshape
 
