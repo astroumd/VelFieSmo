@@ -7,13 +7,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
-# get the observations
+# get the observations, command line arguments are    tablename  Re B R1 m1
+# where Re,B,R1 are now in sky units
 table1 = sys.argv[1]
-oRe = float(sys.argv[2])
-oB  = float(sys.argv[3])
-oR1 = float(sys.argv[4])
-om1 = float(sys.argv[5])
+oRe    = float(sys.argv[2])
+oB     = float(sys.argv[3])
+oR1    = float(sys.argv[4])
+om1    = float(sys.argv[5])
 
 print("Re = %g" % oRe)
 print("B  = %g" % oB)
