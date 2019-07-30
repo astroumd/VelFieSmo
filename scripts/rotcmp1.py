@@ -31,7 +31,9 @@ if do_barolo:
 
 fmod = interp1d(r0, v0, kind = 'cubic')
 
-plt.figure(1)
+#plt.figure(1,figsize=(11, 8.5))    # landscape
+plt.figure(1,figsize=(8.5,11))      # portrait
+
 plt.subplot(2,1,1)
 #plt.plot(rmod,vmod,  '-o',label='model')
 plt.plot(r0,v0,       '-',c='black',label='model')
