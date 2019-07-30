@@ -60,6 +60,10 @@ test1b:
 ngc6503:
 	$(MKGALCUBE) run=ngc6503 step=10 pa=-60 v0=115 r0=0.15 m=2 beam=0.23 vsys=28 sigmav=8
 
+# normalized model for NGC5016:  re=12.8 beam=4-5 r0=6.5 m=2
+ngc5016:
+	$(MKGALCUBE) run=ngc5016 step=20 rmax=25 range=32    inc=46 m=1.85 r0=7.3 beam=4.5 re=12.8 barolo=../../data
+
 # rms=0.0007  robust=0.00057
 ngc6503fit:
 	fitsccd ../data/ngc6503vrad.fits ngc6503.ccd error=1
