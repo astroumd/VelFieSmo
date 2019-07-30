@@ -14,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "2.0 22-jul-2019"
+set version = "2.0 29-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -26,9 +26,8 @@ set version = "2.0 22-jul-2019"
 #   1.8 13-jul-2019    clumpy ISM with (cbody,cbeam,cmap)
 #   1.9 15-jul-2019    Add masked maps, add bad smoothing examples
 #   1.10               output in a FITTING line ready for table
+#   2.0
 #
-#   todo:              Becca method
-#                      Gigi method
 
 
 #  Becca: for the EDGE-CALIFA galaxy sample from my 2018 paper, the
@@ -70,7 +69,7 @@ set z1=0.0                 # scaleheight of disk (velocity) [new model]
 set vloss=0.0              # loss in rotation speed at higher latitudes [old model]
 
 set seed=123               # random seed
-set sigmav=5               # random motion in XY plane (constant as function of radius)
+set sigmav=5               # random motions (constant as function of radius)  [sigma, not FWHM]
 
 set noise=0                # add optional noise to cube
 set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
@@ -179,7 +178,7 @@ if ($cbody || $cmap != 0) then
     endif
   endif
   mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
-       $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
+       $model mass=1 sign=-1 frac=$sigmav,$sigmav,$sigmav abs=t rmax=$rmax |\
     snaprotate - - "$inc,$pa" yz |\
     snapmass - $run.20 ccd=$run.clumps
     # if you switch rotate & mass it implies the clumps are intrinsically that shape
@@ -190,7 +189,7 @@ else if ($cmap) then
 else
   echo Standard disk with mass=$mass
   mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
-       $model mass=1 sign=-1 frac=$sigmav abs=t rmax=$rmax |\
+       $model mass=1 sign=-1 frac=$sigmav,$sigmav,$sigmav abs=t rmax=$rmax |\
        snapmass - - "mass=$mass" |\
     snaprotate - $run.20 "$inc,$pa" yz
 endif
@@ -242,10 +241,6 @@ ccdmom $run.32 $run.33s axis=3 mom=2 clip=$clip
 ccdmath $run.33d,$run.mask $run.33dm 'ifeq(%2,0,0,%1)'
 ccdmath $run.33v,$run.mask $run.33vm 'ifeq(%2,0,0,%1)'
 ccdmath $run.33s,$run.mask $run.33sm 'ifeq(%2,0,0,%1)'
-
-ccdmom $run.32 $run.34v axis=3 mom=3  peak=0 clip=$clip  # peak
-ccdmom $run.32 $run.35v axis=3 mom=31 peak=0 clip=$clip
-ccdmom $run.32 $run.36v axis=3 mom=31 peak=1 clip=$clip  # peak
 
 if (1) then
   echo DISK FLUCTUATIONS:
@@ -446,13 +441,13 @@ if (-d $barolo) then
   echo Running Bbarolo galmod
   set pdir=$barolo
   pedit $pdir/model0_galmod.par FITSFILE=run.fits INC=$inc > run_galmod.par
-  Bbarolo -p run_galmod.par > run_galmod.log
+  BBarolo -p run_galmod.par > run_galmod.log
   
   pedit $pdir/model0_2dfit.par FITSFILE=run.fits INC=$inc > run_2dfit.par
-  Bbarolo -p run_2dfit.par > run_2dfit.log
+  BBarolo -p run_2dfit.par > run_2dfit.log
 
   pedit $pdir/model0_3dfit.par FITSFILE=run.fits INC=$inc > run_3dfit.par
-  Bbarolo -p run_3dfit.par > run_3dfit.log
+  BBarolo -p run_3dfit.par > run_3dfit.log
 
   # ../../scripts/rotcmp1.py
 endif
