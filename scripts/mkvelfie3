@@ -1,49 +1,38 @@
 #! /bin/csh -f
 #
-#  mkvelfie3:    make a velocity field with double smoothing and noise
+#  mkvelfie3:    make a velocity field with smoothing
 #
-#  NGC6503:    Distance       = 5.2 Mpc
-#              Inclination    = 75.1 degrees
-#              Position Angle = -60.1 degrees (receiding side)
-#  
-#  needs NEMO
-#  needs ds9    (make 4 frames for:  mom0, mom1, mom2, pv)
-#
-#  pgplot:
-#  1 mom=1 particle based
-#  2 mom=1 particle based - with density deconvolution (not good)
-#  3 mom=1 cube based
-#  4 mom=3
-#  5 mom=31 peak=0
-#  6 mom=31 peak=1
-#  10   model fit to rotcur, not actually worthwhile
-#  11   HI-profile
+#  checking on the 3 methods, they check out now.
+#  rms in V diff-method-maps now ~0.05 km/s on 100 km/s
+#  The S difference is more interesting, this is where the
+#  interesting analysis will be.  The difference map
+#  is analagous to the sigma map itself, enhanced in center,
+#  flat in outer parts.
 
 #  parameters, can be changed by the user via the commandline
 set run=model1             # identification, and basename for all files
 set nbody=1000000          # number of bodies per model
-set r0=1                   # turnover radius
+set r0=2                   # turnover radius
 set v0=100                 # peak velocity
+set m0=2                   # shape coefficient
 set re=2                   # exponential scalelength of disk
-set rmax=6                 # edge of disk
+set rmax=15                # edge of disk
 
-set pa=-60.1               # PA of disk on sky (E through N)
-set inc=75.1               # INC of disk
-set beam=0.1               # FWHM of (smaller) beam
-set beam2=0.2              # FWHM of (bigger) beam2
+set pa=90                  # PA of disk on sky (E through N)
+set inc=45                 # INC of disk
+set beam=0.2               # FWHM of (smaller) beam
 set vbeam=0                # FWHM of spectral smoothing beam 
-set mass2=0.0              # fraction of beam2 (between 0 and 1)
-set range=8                # gridding from -range:range 
-set vrange=300             # velocity gridding -vrange:vrange
-set nsize=128              # number of pixels in gridding (px=py=2*range/nx)
-set nvel=128               # number of pixels in velocity
+set range=16               # gridding from -range:range 
+set vrange=150             # velocity gridding -vrange:vrange
+set nsize=193              # number of pixels in gridding (px=py=2*range/nx)
+set nvel=121               # number of pixels in velocity
 
 set z0=0.0                 # scaleheight of disk (density)
 set z1=0.0                 # scaleheight of disk (velocity) [new model]
 set vloss=0.0              # loss in rotation speed at higher latitudes [old model]
 
 set seed=0                 # random seed
-set frac=0                 # fraction random motion
+set frac=5                 # fraction random motion
 
 set noise=0                # add optional noise to cube
 set clip=0                 # clipping level for cube
@@ -80,12 +69,14 @@ echo Creating homogeneous disk with $nbody particles times
 #     snapmass - - "mass="1/r" |\
 
 mkdisk out=- nbody=$nbody seed=$seed z0=$z0,$z1 vloss=$vloss \
-       potname=rotcur0 potpars=0,$r0,$v0 mass=1 sign=-1 frac=$frac rmax=$rmax |\
-       snapmass - - mass="1/(r+0.001)" |\
+       potname=rotcurm potpars=0,$v0,$r0,$m0 mass=1 sign=-1 frac=$frac abs=t rmax=$rmax |\
     snaprotate - $run.20 "$inc,$pa" yz
 
+echo "Creating the beam"
+mkplummer - 1 | snapgrid - $run.p1 $grid_pars
+ccdsmooth $run.p1 $run.beam $beam
 
-echo "Creating a velocity field - method 1"
+echo "Creating a velocity field - method 1: snapgrid+mom; ccdsmooth; ccdmath"
 snapgrid $run.20 $run.21 $grid_pars moment=0 evar=m
 snapgrid $run.20 $run.22 $grid_pars moment=1 evar=m
 snapgrid $run.20 $run.23 $grid_pars moment=2 evar=m
@@ -101,26 +92,17 @@ ccdmath $run.20v,$run.21 $run.21v "ifgt(%2,0,%1,0)"
 ccdmath $run.20s,$run.21 $run.21s "ifgt(%2,0,%1,0)"
 
 
-
-echo "Creating the beam"
-mkplummer - 1 | snapgrid - $run.p1 $grid_pars
-ccdsmooth $run.p1 $run.p1a $beam
-ccdsmooth $run.p1 $run.p1b $beam2
-ccdmath $run.p1a,$run.p1b $run.beam "(1-$mass2)*%1+$mass2*%2"
-
-echo "Creating a velocity field - method 2"
-snapgrid $run.20 $run.30 $grid_pars \
-    zrange=-${vrange}:${vrange} nz=$nvel mean=f evar=m
-ccdstat $run.30
+echo "Creating a velocity field - method 2: snapgrid; ccdsmooth; ccdmom+mom;"
+snapgrid $run.20 $run.30 $grid_pars zrange=-${vrange}:${vrange} nz=$nvel mean=f evar=m
+ccdmom $run.30 $run.mask axis=3 mom=0
+# ccdstat $run.30
 if ($vbeam == 0) then
   ccdmath $run.30 $run.31 "%1+rang(0,$noise)"
 else
-  ccdmath $run.30 - "%1+rang(0,$noise)" | ccdsmooth - $run.31 $vbeam z
+  ccdmath $run.30 -       "%1+rang(0,$noise)" | ccdsmooth - $run.31 $vbeam z
 endif
-ccdsmooth $run.31 $run.32.a $beam                                  # twice beam smearing
-ccdsmooth $run.31 $run.32.b $beam2
-ccdmath $run.32.a,$run.32.b $run.32 "(1-$mass2)*%1+$mass2*%2"
-ccdstat $run.32
+ccdsmooth $run.31 $run.32 $beam   
+# ccdstat $run.32
 ccdmom $run.32 $run.33d axis=3 mom=0 clip=$clip
 ccdmom $run.32 $run.33v axis=3 mom=1 clip=$clip rngmsk=true
 ccdmom $run.32 $run.33s axis=3 mom=2 clip=$clip
@@ -130,12 +112,13 @@ ccdmom $run.32 $run.35v axis=3 mom=31 peak=0 clip=$clip
 ccdmom $run.32 $run.36v axis=3 mom=31 peak=1 clip=$clip  # peak
 
 
+# slow because snapgrid does the point by point beam smearing
+# but it is what best matches how a telescope operates
 
-
-echo "Creating a velocity field - method 3"
-snapgrid $run.20 $run.41 $grid_pars moment=0 evar=m svar=$beam
-snapgrid $run.20 $run.42 $grid_pars moment=1 evar=m svar=$beam
-snapgrid $run.20 $run.43 $grid_pars moment=2 evar=m svar=$beam
+echo "Creating a velocity field - method 3: snapgrid+smooth; ccdmath"
+snapgrid $run.20 $run.41 $grid_pars moment=0 evar=m svar=$beam/2.35482
+snapgrid $run.20 $run.42 $grid_pars moment=1 evar=m svar=$beam/2.35482
+snapgrid $run.20 $run.43 $grid_pars moment=2 evar=m svar=$beam/2.35482
 ccdmath $run.41,$run.42,$run.43 $run.40d %1
 ccdmath $run.41,$run.42,$run.43 $run.40v "%2/%1"
 ccdmath $run.41,$run.42,$run.43 $run.40s "sqrt(%3/%1-%2*%2/(%1*%1))"
@@ -144,24 +127,24 @@ ccdmath $run.40d,$run.41 $run.41d "ifgt(%2,0,%1,0)"
 ccdmath $run.40v,$run.41 $run.41v "ifgt(%2,0,%1,0)"
 ccdmath $run.40s,$run.41 $run.41s "ifgt(%2,0,%1,0)"
 
+# masked versions
+
+ccdmath $run.21d,$run.mask $run.29dm 'ifeq(%2,0,0,%1)'
+ccdmath $run.21v,$run.mask $run.29vm 'ifeq(%2,0,0,%1)'
+ccdmath $run.21s,$run.mask $run.29sm 'ifeq(%2,0,0,%1)'
+
+ccdmath $run.33d,$run.mask $run.39dm 'ifeq(%2,0,0,%1)'
+ccdmath $run.33v,$run.mask $run.39vm 'ifeq(%2,0,0,%1)'
+ccdmath $run.33s,$run.mask $run.39sm 'ifeq(%2,0,0,%1)'
+
+ccdmath $run.41d,$run.mask $run.49dm 'ifeq(%2,0,0,%1)'
+ccdmath $run.41v,$run.mask $run.49vm 'ifeq(%2,0,0,%1)'
+ccdmath $run.41s,$run.mask $run.49sm 'ifeq(%2,0,0,%1)'
+
 
 
 # PV slice based on $nsize/2
 ccdslice $run.31 - y $nsize/2-1:$nsize/2 | ccdmom - $run.pv 3 -1
-
-
-xpaset -p ds9 frame frameno 1
-#nds9 $run.21d
-nds9 $run.33d
-xpaset -p ds9 frame frameno 2
-#nds9 $run.21v
-nds9 $run.33v
-xpaset -p ds9 frame frameno 3
-#nds9 $run.21s
-nds9 $run.33s
-xpaset -p ds9 frame frameno 4
-nds9 $run.pv
-
 
 
 # single dish profile ('the busy function')
@@ -174,47 +157,7 @@ ccdmom $run.32 - axis=1 mom=0 |\
 
 # export for barolo or so, in decent units (could also use ccdsky)
 # for ALMA at (12h,-30d)
-ccdfits $run.32 $run.fits radecvel=t scale=1/60.0/8,1/60.0/8,1000.0 vsys=1000 crpix=$nsize/2+1,$nsize/2+1,$nvel/2+1 crval=180,-30,0
-# rotcur
-
-rotcur $run.21v 0:250:10 0:100:20 90 $inc 0 63.5,63.5 units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur1 beam="$beam*60.0"
-rotcur $run.21v 0:250:10 0:100:20 90 $inc 0 63.5,63.5 units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur2 beam="$beam*60.0" dens=$run.21d
-rotcur $run.33v 0:250:10 0:100:20 90 $inc 0 63.5,63.5 units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur3 beam="$beam*60.0"
-rotcur $run.34v 0:250:10 0:100:20 90 $inc 0 63.5,63.5 units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur4 beam="$beam*60.0"
-rotcur $run.35v 0:250:10 0:100:20 90 $inc 0 63.5,63.5 units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur5 beam="$beam*60.0"
-rotcur $run.36v 0:250:10 0:100:20 90 $inc 0 63.5,63.5 units=arcmin fixed=vsys,pa,inc,xpos,ypos tab=$run.rotcur6 beam="$beam*60.0"
+ccdfits $run.32 $run.fits radecvel=t scale=1/60.0/8,1/60.0/8,1000.0 vsys=0 crpix=$nsize/2+1,$nsize/2+1,$nvel/2+1 crval=180,-30,0
 
 
-echo "0 0 0 0 0 90.00  0 60.00  0  63.50 0 63.50  0  0 0" > $run.rotcurtab1
-echo "0 0 0 0 0 90.00  0 60.00  0  63.50 0 63.50  0  0 0" > $run.rotcurtab2
-tabcomment $run.rotcur1 - delete=t >> $run.rotcurtab1
-tabcomment $run.rotcur2 - delete=t >> $run.rotcurtab2
-tabcomment $run.rotcur3 - delete=t >> $run.rotcurtab3
-tabcomment $run.rotcur4 - delete=t >> $run.rotcurtab4
-tabcomment $run.rotcur5 - delete=t >> $run.rotcurtab5
-tabcomment $run.rotcur6 - delete=t >> $run.rotcurtab6
 
-    
-tabplot $run.rotcurtab1 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=240 ycoord=100 xcoord="$beam*60.0" yapp=1/xs
-tabplot $run.rotcurtab2 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=240 ycoord=100 xcoord="$beam*60.0" yapp=2/xs
-tabplot $run.rotcurtab3 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=240 ycoord=100 xcoord="$beam*60.0" yapp=3/xs
-tabplot $run.rotcurtab4 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=240 ycoord=100 xcoord="$beam*60.0" yapp=4/xs
-tabplot $run.rotcurtab5 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=240 ycoord=100 xcoord="$beam*60.0" yapp=5/xs
-tabplot $run.rotcurtab6 1 4 dycol=5 line=1,1 point=2,0.1 xmin=0 ymin=0 ymax=120 xmax=240 ycoord=100 xcoord="$beam*60.0" yapp=6/xs
-
-head -5 $run.rotcurtab1 | tabnllsqfit - 1 4 par=0,1 free=0,1
-
-# fit a exponential growth  y=p0*(exp(x/p1)-1)
-tabnllsqfit $run.rotcurtab1 1 4 fit=grow par=100,60 free=1,1 out=$run.fit
- tabmath $run.fit - %2-%3 |\
- tabplot - 1 2,3,4 color=2,3,4 line=1,1 ycoord=0 xcoord=0 yapp=10/xs
-
-# simulate global HI profile
-tabplot $run.spec line=1,1 xmin=-120 xmax=120 ymin=0 yapp=11/xs 
-
-
-# magic output
-
-set magic = (`tail $run.rotcurtab1 | head -8 | tabstat - 4 | egrep '(mean|disp)' | awk '{print $2}'`)
-
-echo MAGIC: $z0 $z1 $inc $v0 $magic
