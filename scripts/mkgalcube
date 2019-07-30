@@ -14,7 +14,7 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "2.0 29-jul-2019"
+set version = "2.0 30-jul-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
@@ -465,6 +465,8 @@ set mring  = `grep ^p2 $run.fit4 | awk '{print $2}'`
 set vshape = `grep ^P1: $run.rcs | awk '{print $2}'`
 set rshape = `grep ^P2: $run.rcs | awk '{print $2}'`
 set mshape = `grep ^P3: $run.rcs | awk '{print $2}'`
+
+rotcurves rotcurm 0,$vshape,$rshape,$mshape radii="1:$rmax*60:10" plot=f tab=t > $run.rcshape
 
 echo 'FITTING: $m $re $beam $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape'
 echo "FITTING: $m $re $beam $vslit $rslit $mslit   $vring $rring $mring   $vshape $rshape $mshape"
