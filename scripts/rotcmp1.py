@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#  compare rotation curves
+#  compare rotation curves; this assumes a directory populated by "mkgalmod"
 #
 
 import sys
@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 #
 do_barolo = True
 
-#                     # pick a table
+#                     # pick a table from what mkgalmod has made
 table0 = 'run.rotmod'
 table1 = 'run.rcmod'
 table2 = 'run.rotcurtab'
@@ -37,7 +37,6 @@ fmod = interp1d(r0, v0, kind = 'cubic')
 plt.figure(1,figsize=(8.5,11))      # portrait
 
 plt.subplot(2,1,1)
-#plt.plot(rmod,vmod,  '-o',label='model')
 plt.plot(r0,v0,        '-', c='black',label='model')
 plt.plot(rshape,vshape,'--',c='black',label='shape')
 plt.plot(rring,vring,  '-o',c='red',  label='rotcur')
