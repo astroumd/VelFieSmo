@@ -1,4 +1,4 @@
-FITSFILE    model0.fits
+FITSFILE    run.fits
 OUTFOLDER   barolo_2dfit
 
 //   this is "rotcur"

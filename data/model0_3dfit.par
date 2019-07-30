@@ -1,24 +1,27 @@
-FITSFILE    model0.fits
+FITSFILE    run.fits
 OUTFOLDER   barolo_3dfit
 
 3DFIT       true
 
-NRADII      81
-RADSEP      10
+// recommended 2-3 pixels, but not 1
+NRADII      41
+RADSEP      20
+//
 VSYS        0
-XPOS        97         
-YPOS        97     
-VROT        100  
-VDISP       5          
-INC         75
+XPOS        97
+YPOS        97
+VROT        100
+VDISP       5
+INC         30
 PA          90
 Z0          0
-DENS        1
 VRAD        0
-// Normalization type
-NORM        NONE
-// Mask
-MASK        SEARCH
+// Normalization type (NONE didn't work, perhaps bug, LOCAL needs to be used)
+NORM        LOCAL
+// Mask (needs to be NONE, not SEARCH, since we have no noise)
+MASK        NONE
 // Free parameters
 FREE        VROT
 // FREE        VROT INC PA
+// Instrumental spectral broadening (we usually have none)
+LINEAR      0
