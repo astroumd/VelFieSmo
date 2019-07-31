@@ -91,7 +91,7 @@ set vel=mom                 # what kind of velocity field to use (mom, peak, ...
 set bsc=0                   # what kind of beam smearing correction (0, begeman, ...) [deprecated]
 
 set useinc=,inc             # normally INC is a fixed parameter, blank this keyword to make it free
-set barolo=0                # set to 1 if you want 2D and 3D models
+set barolo=0                # set to the data directory if you want 2D and 3D models, 0 if not (e.g. barolo=../../data)
 
 set yapps=yapp%d.ps/vcps    # yapp printf string (%d/xs, yapp%d.ps/vcps)
 set yappn=1                 # first yapp number
@@ -205,7 +205,9 @@ echo "Creating the beam (not used for anything)"
 mkplummer - 1 | snapgrid - $run.1p $grid_pars
 ccdsmooth $run.1p $run.1beam $beam
 
-echo "Creating a velocity field - method 2"
+# we use method 2 of gridding, there is also method-1 and method-3, they give identical results
+# see discussion in mkvelfie3
+echo "Creating a velocity field - method 2 (grid-smooth-moment)"
 snapgrid $run.20 $run.30 $grid_pars zrange=-${vrange}:${vrange} nz=$nvel mean=f evar=m
 
 # create a "mask" for later
@@ -238,19 +240,19 @@ ccdmom $run.32 $run.33d axis=3 mom=0 clip=$clip
 ccdmom $run.32 $run.33v axis=3 mom=1 clip=$clip rngmsk=true
 ccdmom $run.32 $run.33s axis=3 mom=2 clip=$clip
 # masked versions
-ccdmath $run.33d,$run.mask $run.33dm 'ifeq(%2,0,0,%1)'
-ccdmath $run.33v,$run.mask $run.33vm 'ifeq(%2,0,0,%1)'
-ccdmath $run.33s,$run.mask $run.33sm 'ifeq(%2,0,0,%1)'
+ccdmath $run.33d,$run.mask $run.dmap 'ifeq(%2,0,0,%1)'
+ccdmath $run.33v,$run.mask $run.vmap 'ifeq(%2,0,0,%1)'
+ccdmath $run.33s,$run.mask $run.smap 'ifeq(%2,0,0,%1)'
 
 if (1) then
   echo DISK FLUCTUATIONS:
-  ccdstat $run.33dm bad=0
+  ccdstat $run.dmap bad=0
 endif
 
 if ($vel == mom) then
-  ln -s $run.33v $run.vel
+  cp $run.33v $run.vel
 else if ($vel == peak) then
-  ln -s $run.34v $run.vel
+  cp $run.34v $run.vel
 else
   echo Invalid vel=$vel method
   exit 1
@@ -451,7 +453,6 @@ if (-d $barolo) then
 
   # ../../scripts/rotcmp1.py
 endif
-
 
 # assemble useful output for the project
 set vslit  = `grep ^p0 $run.fit2 | awk '{print $2}'`
