@@ -1,0 +1,23 @@
+# rotcur: VERSION 2.12c [NEMO]
+# 
+#  file                : NGC2347.co.de20_smo.mom1.ccd
+#  velocity field file : NGC2347.co.de20_smo.mom1.ccd (image)
+#  free angle          :  0.0 (degrees)
+#  velocity field      : both halves
+#  used weighting      : cosine
+#  parameters to fit   : vrot
+#  tol, lab, itmax     : 0.001 0.001 50
+# 
+# 
+# 
+# 
+#   radius   systemic   error  rotation   error position    error   inclination  error   x-position   error   y-position   error
+#           velocity           velocity           angle               angle               of center            of center
+#  (arcsec)   (km/s)   (km/s)   (km/s)    (km/s)(degrees)  (degrees)  (degrees)   (degrees) (grids w.r.t. (0,0))  (grids w.r.t. (0,0))
+    14.00   4359.00     0.00    270.60    1.81     9.00       0.00      51.00       0.00      48.00      0.00      49.00      0.00 106   9.34
+    12.00   4359.00     0.00    262.62    1.50     9.00       0.00      51.00       0.00      48.00      0.00      49.00      0.00 102   7.58
+    10.00   4359.00     0.00    254.67    1.73     9.00       0.00      51.00       0.00      48.00      0.00      49.00      0.00 78   7.66
+     8.00   4359.00     0.00    237.49    2.32     9.00       0.00      51.00       0.00      48.00      0.00      49.00      0.00 60   9.37
+     6.00   4359.00     0.00    206.15    3.88     9.00       0.00      51.00       0.00      48.00      0.00      49.00      0.00 46  13.25
+     4.00   4359.00     0.00    155.91    7.06     9.00       0.00      51.00       0.00      48.00      0.00      49.00      0.00 36  20.13
+     2.00   4359.00     0.00     81.90   15.36     9.00       0.00      51.00       0.00      48.00      0.00      49.00      0.00 14  30.09
