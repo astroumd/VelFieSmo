@@ -66,9 +66,28 @@ else:
     re = 8.5
 
     # nearest pt in grid
+    # d=0.41
     v0 = v1
     r0 = 1.7
     m0 = 2.0
+    # 0.40
+    r0 = 1.25
+    m0 = 3.0
+    # 0.39
+    r0 = 1.72
+    m0 = 2.5
+    # 0.35 - better fit than 0.32 !
+    r0 = 1.46
+    m0 = 2.75
+    # 0.321
+    r0 = 1.448
+    m0 = 2.5
+    # 0.299
+    r0 = 1.332
+    m0 = 2.6
+    # 0.283
+    r0 = 1.247
+    m0 = 2.7
 
 
 # this means, for reference
@@ -99,7 +118,7 @@ vmod0 = vmodel(rmod,v0,r0,m0)
 #(r3p,r3,vrot3,disp3,inc3,pa3,z03p,z03,e3,xpos3,ypos3,vsys3,vrad3) = np.loadtxt(table6).T
 
 # old grep&awk tony table
-(r3,v3,dv3) = np.loadtxt(table3).T
+# (r3,v3,dv3) = np.loadtxt(table3).T
 # new official style
 bfiles = glob.glob('edge_pydb/edge_pydb/dat_prof/bbarolo/*csv')
 r4 = np.array([])
