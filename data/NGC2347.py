@@ -141,8 +141,8 @@ v4 = v4 * ifac
 
 plt.figure(1)
 plt.subplot(1,1,1)
-plt.plot(rmod,vmod1,  '-',label='observed model fit')
-plt.plot(rmod,vmod0, '--',label='deconvolved model')
+plt.plot(rmod,vmod1,  '-',label='observed 2D model fit')
+plt.plot(rmod,vmod0, '--',label='deconvolved 2D model')
 plt.plot(r1,vrot1,   '-o',c='black',label='rotcur-mom1')
 plt.plot(r2,vrot2,   '-o',c='black',label='rotcur-cgrad-vcen')
 if False:
