@@ -1,0 +1,35 @@
+# rotcur: VERSION 2.12c [NEMO]
+# 
+#  file                : NGC5016.co.de20_dil.mom1.ccd
+#  velocity field file : NGC5016.co.de20_dil.mom1.ccd (image)
+#  free angle          : 20.0 (degrees)
+#  velocity field      : both halves
+#  used weighting      : cosine
+#  parameters to fit   : vrot
+#  tol, lab, itmax     : 0.001 0.001 50
+# 
+# 
+# 
+# 
+#   radius   systemic   error  rotation   error position    error   inclination  error   x-position   error   y-position   error
+#           velocity           velocity           angle               angle               of center            of center
+#  (arcsec)   (km/s)   (km/s)   (km/s)    (km/s)(degrees)  (degrees)  (degrees)   (degrees) (grids w.r.t. (0,0))  (grids w.r.t. (0,0))
+    28.75   2596.00     0.00    173.35    9.09   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 6   8.46
+    26.25   2596.00     0.00    159.94    1.63   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 38   5.42
+    23.75   2596.00     0.00    163.55    1.21   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 81   6.01
+    21.25   2596.00     0.00    165.47    1.33   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 123   7.54
+    18.75   2596.00     0.00    163.80    0.96   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 141   5.92
+    16.25   2596.00     0.00    156.28    0.89   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 141   5.57
+    13.75   2596.00     0.00    150.81    0.79   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 114   4.42
+    11.25   2596.00     0.00    137.76    0.76   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 96   3.90
+     8.75   2596.00     0.00    123.81    1.29   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 78   6.01
+     6.25   2596.00     0.00    102.67    2.42   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 54   9.32
+     3.75   2596.00     0.00     73.67    3.16   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 30   8.89
+     1.25   2596.00     0.00     31.67    4.96   240.00       0.00      46.00       0.00      50.00      0.00      50.00      0.00 10   8.39
+# 
+#  Error correction factor: : 1
+#  average inclination      :    46.00  (   0.000)  degrees
+#  average position angle   :   240.00  (   0.000)  degrees
+#  average systemic velocity:  2596.00  (   0.000)  km/s
+#  average x-position       :    50.00  (   0.000)  grids
+#  average y-position       :    50.00  (   0.000)  grids
