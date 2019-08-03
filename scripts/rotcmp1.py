@@ -1,15 +1,23 @@
 #! /usr/bin/env python
 #
 #  compare rotation curves; this assumes a directory populated by "mkgalmod"
+#  with default rmax and vmax
 #
 
-import sys
+import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
 #
 do_barolo = True
+vmax      = [110, 20, 2]
+rmax      = 400
+
+#  pick things for the title
+title = open('run.history','r').readlines()
+cwd = os.getcwd()
+cwd0 = cwd[cwd.rfind('/')+1:]
 
 #                     # pick a table from what mkgalmod has made
 table0 = 'run.rotmod'
@@ -44,13 +52,14 @@ plt.plot(rslit,vslit,  '-o',c='green',label='slit')
 if do_barolo:
     plt.plot(r2,vrot2,   '-o',c='blue',label='barolo_2dfit')
     plt.plot(r3,vrot3,   '-o',c='magenta',label='barolo_3dfit')
-plt.xlim(0,800)    
+plt.title(cwd0 + ' ' + title[0])
+plt.xlim(0,rmax)
+plt.ylim(0,vmax[0])
 #plt.xlabel('Radius')
-plt.ylabel('Velocity')
+plt.ylabel('Velocity [km/s]')
 plt.grid()
 plt.legend(loc='lower right',fontsize = 'small')
 
-vmax = 10
 
 plt.subplot(4,1,3)
 plt.plot(rmod,vmod-fmod(rmod),      '-', c='black',label='model')
@@ -60,14 +69,12 @@ plt.plot(rslit,vslit-fmod(rslit),   '-o',c='green',label='slit')
 if do_barolo:
     plt.plot(r2,vrot2-fmod(r2),     '-o',c='blue',   label='barolo_2dfit')
     plt.plot(r3,vrot3-fmod(r3),     '-o',c='magenta',label='barolo_3dfit')
-plt.xlim(0,800)
-plt.ylim(-vmax,vmax)
+plt.xlim(0,rmax)
+plt.ylim(-vmax[1],vmax[1])
 #plt.xlabel('Radius')
 plt.ylabel('Velocity difference')
 plt.grid()
 #plt.legend(fontsize = 'x-small')
-
-vmax = 1
 
 plt.subplot(4,1,4)
 plt.plot(rmod,vmod-fmod(rmod),      '-', c='black',label='model')
@@ -77,9 +84,9 @@ plt.plot(rslit,vslit-fmod(rslit),   '-o',c='green',label='slit')
 if do_barolo:
     plt.plot(r2,vrot2-fmod(r2),     '-o',c='blue',   label='barolo_2dfit')
     plt.plot(r3,vrot3-fmod(r3),     '-o',c='magenta',label='barolo_3dfit')
-plt.xlim(0,800)
-plt.ylim(-vmax,vmax)
-plt.xlabel('Radius')
+plt.xlim(0,rmax)
+plt.ylim(-vmax[2],vmax[2])
+plt.xlabel('Radius [arcsec]')
 plt.ylabel('Velocity difference')
 plt.grid()
 #plt.legend(fontsize = 'x-small')
