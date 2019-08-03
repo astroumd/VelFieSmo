@@ -6,14 +6,14 @@ OUTFOLDER   barolo_galmod
 // the relevant one should match the ones below
 GALMOD      true
 
-NRADII      81
+NRADII      41
 RADSEP      10  
 VSYS        0
 XPOS        97         
 YPOS        97     
 VROT        100  
 VDISP       5         
-INC         75
+INC         45
 PA          90
 Z0          0
 DENS        1
