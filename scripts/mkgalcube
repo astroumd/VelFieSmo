@@ -14,21 +14,12 @@
 #    http://gigjozsa.github.io/tirific/modelling_strategy.html
 #    https://bbarolo.readthedocs.io/en/latest/
 #
-set version = "2.0 30-jul-2019"
+set version = "3.0 2-aug-2019"
 #
 # Version history:
 #   1.0 13-jun-2019    First version, just creating the fits cube
-#   1.1 26-jun-2019    Leaving ccd files with maps of the results
-#   1.2  1-jul-2019    Adding various rotcur and plotting options
-#   1.4  3-jul-2019    Constant disk velocity dispersion option
-#   1.5  9-jul-2019    rotcurshape (note: rotcurm == core), order r0,v0
-#   1.6 10-jul-2019    defaults changed (step, seed)
-#   1.8 13-jul-2019    clumpy ISM with (cbody,cbeam,cmap)
-#   1.9 15-jul-2019    Add masked maps, add bad smoothing examples
-#   1.10               output in a FITTING line ready for table
-#   2.0
+#   3.0  2-aug-2019    Scaling now with r0=1 v0=100 (branch: scaling)
 #
-
 
 #  Becca: for the EDGE-CALIFA galaxy sample from my 2018 paper, the
 #  ratio of the average molecular gas disk scale length to the average
@@ -42,27 +33,26 @@ set version = "2.0 30-jul-2019"
 set run=model0             # identification, and basename of all files
 set nbody=1000000          # number of points to sample the model
 
-set v0=100                 # peak velocity
-set r0=2                   # rotation curve characteristic radius
-set re=2                   # exponential scalelength of gas disk
+set v0=100                 # peak velocity (units-less, but will become km/s)
+set r0=1                   # rotation curve characteristic radius (unit-less, but will become arcmin)
+set re=1                   # exponential scalelength of gas disk
 set m=2                    # rotcurm/core index (m=2 is logarithmic potential)
 set lbs=1                  # L_B/L_B* Persic shape parameter
 
-set rmax=15                # edge of disk
-set mc=-1                  # mass concentration parameter
+set rmax=7.5               # edge of disk
 
 set pa=90                  # PA of disk on sky (E through N) - fixed to 90 for real models to simplify taking cuts like PV slices
-set inc=75                 # INC of disk
+set inc=45                 # INC of disk
 
 set beam=1                 # FWHM of beam (14" for VLA for N6503)
 set vbeam=0                # FWHM of spectral smoothing beam
-set range=16               # gridding from -range:range 
+set range=8                # gridding from -range:range 
 set vrange=150             # velocity gridding -vrange:vrange
 
 set nsize=193              # number of pixels in gridding (px=py=2*range/nx) [should be odd]
 set nvel=121               # number of pixels in velocity  [should be odd]
 
-set step=10                # stepsize (in arcsec) in tilted ring method
+set step=10                # stepsize (in arcsec now) in tilted ring method
 
 set z0=0.0                 # scaleheight of disk (density)
 set z1=0.0                 # scaleheight of disk (velocity) [new model]
@@ -71,13 +61,13 @@ set vloss=0.0              # loss in rotation speed at higher latitudes [old mod
 set seed=123               # random seed
 set sigmav=5               # random motions (constant as function of radius)  [sigma, not FWHM]
 
-set noise=0                # add optional noise to cube
+set noise=0                # add optional noise to cube [tricky, see next option]
 set nmode=0                # noise before (0) or after (1) smoothing?  [after is not good idea unless you known what you are doing]
-set clip=0                 # clipping level for cube
+set clip=0                 # clipping level for cube for computing moments
 
 set cbody=0                # set to a finite number to have clump bodies (2000 is pretty good)
 set cbeam=1                # beam to smooth clumps with (1 or 2 seems good)
-set cmap=0                 # A prepared CCD image 
+set cmap=0                 # A prepared CCD image instead of random clumps
 
 set restfreq=1.420405751786 # HI restfreq in GHz 
 
@@ -117,15 +107,7 @@ set yapp=`printf $yapps $yappn` ; @ yappn++
 set grid_pars=(xrange=-${range}:${range} yrange=-${range}:${range} nx=$nsize ny=$nsize)
 set cell=`nemoinp "2*$range/$nsize*60"`
 set cen=`nemoinp $nsize/2-0.5`
-if ($mc == -1) then
-   set mass = "exp(-r/$re)"
-else if ($mc == 0) then
-   set mass = 1
-else if ($mc == 1) then
-   set mass = "1/(r+0.001)"
-else
-   set mass = 1
-endif
+set mass="exp(-r/$re)"
 
 # kepler (1/r is a problem)
 set model = (potname=point   potpars=0,1)
@@ -159,7 +141,7 @@ echo `date` :: $* >> $run.history
 # ================================================================================ START
 
 echo mkgalcube version $version using yapps=$yapps
-echo Creating disk with $nbody particles and concentration parameter $mc
+echo Creating disk with $nbody particles re=$re 
 echo Rotation Curve model=$model
 
 if ($cbody || $cmap != 0) then
@@ -329,11 +311,11 @@ echo "0 $vsys 0 0 0 $pa 0 $inc 0  $center 0 $center  0  0 0"    > $run.tmprotcur
 tabcomment $run.rotcur - delete=t                              >> $run.tmprotcurtab
 sort -n $run.tmprotcurtab                                       > $run.rotcurtab
 
-tabplot $run.rotcurtab 1 4 0 800 -10 $v0+10 dycol=5 line=1,1 point=2,0.1 ycoord=0,$v0 xcoord="$beam*60.0" yapp=$yapp
+tabplot $run.rotcurtab 1 4 0 400 -10 $v0+10 dycol=5 line=1,1 point=2,0.1 ycoord=0,$v0 xcoord="$beam*60.0" yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
-tabplot $run.rc0       1 2 0 800 -10 $v0+10 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
+tabplot $run.rc0       1 2 0 400 -10 $v0+10 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
-tabplot $run.rotmod    1 2 0 800 -10 $v0+10 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
+tabplot $run.rotmod    1 2 0 400 -10 $v0+10 line=1,1 point=2,0.05 ycoord=0,$v0 yapp=$yapp
 set yapp=`printf $yapps $yappn` ; @ yappn++
 
 if (1) then
@@ -359,7 +341,7 @@ if (1) then
   tabspline $run.rotmod x=@$run.rotcurrad | tabmath - - 0 > $run.rcmod
   
   paste $run.rcring $run.rcslit $run.rcmod                > $run.rccmp
-  tabplot $run.rccmp  1,4,7  2,5,8  0 800 -10 $v0+10 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
+  tabplot $run.rccmp  1,4,7  2,5,8  0 400 -10 $v0+10 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
   tabplot $run.rccmp  1,4,7  2,5,8  0 160 -10 $v0+10 color=4,2,3 line=1,1 point=2,0.1 dycol=3,6,9 ycoord=0,$v0 yapp=$yapp
   set yapp=`printf $yapps $yappn` ; @ yappn++
@@ -423,7 +405,7 @@ echo Fitted slope: `nemoinp $a/$b`
 
 # overall
 tabmath $run.fit - %2-%3 |\
- tabplot - 1 2,3,4 0 800 -10 $v0+10  color=2,3,4 line=1,1 point=2,0.05 ycoord=0,$v0 xcoord=0 yapp=$yapp
+ tabplot - 1 2,3,4 0 400 -10 $v0+10  color=2,3,4 line=1,1 point=2,0.05 ycoord=0,$v0 xcoord=0 yapp=$yapp
  set yapp=`printf $yapps $yappn` ; @ yappn++ 
 
 # center part
@@ -444,10 +426,12 @@ if (-d $barolo) then
   set pdir=$barolo
   pedit $pdir/model0_galmod.par FITSFILE=run.fits INC=$inc > run_galmod.par
   BBarolo -p run_galmod.par > run_galmod.log
-  
+
+  echo Running Bbarolo 2dfit
   pedit $pdir/model0_2dfit.par FITSFILE=run.fits INC=$inc > run_2dfit.par
   BBarolo -p run_2dfit.par > run_2dfit.log
 
+  echo Running Bbarolo 3dfit
   pedit $pdir/model0_3dfit.par FITSFILE=run.fits INC=$inc > run_3dfit.par
   BBarolo -p run_3dfit.par > run_3dfit.log
 
