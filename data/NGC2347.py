@@ -26,10 +26,12 @@ t10 = 'edge_pydb/edge_pydb/dat_prof/rotcur_levy/HA_natv/NGC5016.Ha.RC.txt'
 t11 = 'edge_pydb/edge_pydb/dat_prof/rotcur_levy/CO_natv/NGC5016.CO.RC.txt'
 t12 = 'edge_pydb/edge_pydb/dat_prof/rotcur_levy/HA_smo6/NGC5016.Ha.RC.txt'
 t13 = 'edge_pydb/edge_pydb/dat_prof/rotcur_levy/CO_smo6/NGC5016.CO.RC.txt'
+#   Tony: don't use the build ones'
 t14 = 'edge_pydb/edge_pydb/dat_prof/radprof/build/rproftxt/NGC5016.smo7_smob1.rprof.txt'
 t15 = 'edge_pydb/edge_pydb/dat_prof/radprof/build/rproftxt/NGC5016.de20_smob1.rprof.txt'
 t16 = 'edge_pydb/edge_pydb/dat_prof/radprof/build/rproftxt/NGC5016.de20_smob0.rprof.txt'
 t17 = 'edge_pydb/edge_pydb/dat_prof/radprof/build/rproftxt/NGC5016.smo7_smob0.rprof.txt'
+#
 t18 = 'edge_pydb/edge_pydb/dat_prof/rotcur_leung/EDGE_CO_vrot/NGC2347_co_vrot.txt'
 t19 = 'edge_pydb/edge_pydb/dat_prof/rotcur_leung/EDGE_CO_vrot_bsc/NGC2347_co_vrot.txt'
 
@@ -145,8 +147,9 @@ plt.plot(rmod,vmod1,  '-',label='observed 2D model fit')
 plt.plot(rmod,vmod0, '--',label='deconvolved 2D model')
 plt.plot(r1,vrot1,   '-o',c='black',label='rotcur-mom1')
 plt.plot(r2,vrot2,   '-o',c='black',label='rotcur-cgrad-vcen')
+plt.scatter(r4,v4   ,     c='blue', label='BBarolo (Wong)')
+
 if False:
-    plt.scatter(r4,v4   ,c='g',label='BBarolo')
     plt.scatter(r10,v10 ,label='levy-10 inc=39.9')
     plt.scatter(r11,v11 ,label='levy-11')
     plt.scatter(r12,v12 ,label='levy-12')
