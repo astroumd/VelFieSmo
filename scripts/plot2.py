@@ -16,11 +16,20 @@ import matplotlib.pyplot as plt
 #                     # pick a table via the first command line argument
 table1 = sys.argv[1]
 
+# set defaults for remaining arguments
+# pick something in case you want to fix those (2,2,1) are the defaults in mkgalcube
+mpick = 2
+rpick = 1
+bpick = 1
+if len(sys.argv) > 2: mpick = float(sys.argv[2])
+if len(sys.argv) > 3: rpick = float(sys.argv[3])
+if len(sys.argv) > 4: bpick = float(sys.argv[4])
+    
 vpick = 3           # pick which one:   1=slit 2=ring 3=shape
 
 # get data
 (m,re,b,vslit,rslit,mslit,vring,rring,mring,vshape,rshape,mshape) = np.loadtxt(table1).T
-r0 = 120   # scaling value (see mkgalcube) - we keep them constant
+r0 =  60   # scaling value (see mkgalcube) - we keep them constant
 v0 = 100   # scaling value (see mkgalcube) - we keep them constant
 
 # get all uniq input parameters (m, re and beam)
@@ -30,10 +39,6 @@ ub = np.unique(b)
 print("Unique m    :" , um)
 print("Unique re   :" , ur)
 print("Unique beam :" , ub)
-# pick something in case you want to fix those (2,2,1) are the defaults in mkgalcube
-mpick = 2
-rpick = 0.5   #2 def.  try bracket 1 and 4
-bpick = 1
 
 # pick one of the three fitting methods
 if vpick==1:
@@ -260,6 +265,7 @@ plt.scatter(x,y3, label='shape')
 plt.xlabel('$B/R_0$')
 plt.ylabel('$m_1$')
 plt.grid()
+
 #plt.legend()
 
 # pad=0.4, w_pad=0.5, h_pad=1.0)

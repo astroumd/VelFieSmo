@@ -28,9 +28,9 @@ print("Unique m    :" , um)
 print("Unique re   :" , ur)
 print("Unique beam :" , ub)
 # pick something in case you want to fix those (2,2,1) are the defaults in mkgalcube
-mpick = 2
-rpick = 2
-bpick = 1
+mpick = 2.5
+rpick = 6
+bpick = 4
 
 # pick one of the three fitting methods
 if vpick==1:
